@@ -1,0 +1,53 @@
+# Common patterns
+node_modules/
+target/
+build/
+dist/
+venv/
+__pycache__/
+*.log
+*.tmp
+*.bak
+
+# Java-specific
+*.class
+*.war
+*.ear
+*.jar
+target/
+build/
+
+# Python-specific
+*.pyc
+*.egg-info
+*.dist-info
+
+# Node.js-specific
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDE and editor files
+.vscode/
+.idea/
+*.iml
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+
+#configs files
+*.yml
+*.properties
+*.config
+*.ini
+*.env
+config/
+settings.json
+
+# Python-specific
+*.pyc
+__pycache__/
+*.egg-info/
+*.dist-info/
+venv/
