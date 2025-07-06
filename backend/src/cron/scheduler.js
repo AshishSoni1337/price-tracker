@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { Product } from '../models/product.js';
 import { productService } from '../services/productService.js';
+import { MAX_CONCURRENT_TABS } from '../config/appConfig.js';
 
 // This is our main price tracking job
 cron.schedule('* * * * *', async () => {
@@ -15,19 +16,23 @@ cron.schedule('* * * * *', async () => {
             return;
         }
 
-        console.log(`Found ${productsToTrack.length} active products to track.`);
+        console.log(`Found ${productsToTrack.length} active products to track. Concurrency limit: ${MAX_CONCURRENT_TABS}`);
 
-        for (const product of productsToTrack) {
-            try {
-                console.log(`- Updating ${product.name} (ID: ${product._id})`);
-                await productService.updateProduct(product._id);
-            } catch (error) {
-                console.error(`Error updating product ${product._id}: ${error.message}`);
-                // The error logging (with screenshot) is handled inside the scraper,
-                // so here we just need to mark the product as errored.
-                await Product.findByIdAndUpdate(product._id, { status: 'ERROR' });
-            }
-        }
+        const updatePromises = productsToTrack.map(product =>
+            (async () => {
+                try {
+                    console.log(`- Updating ${product.name} (ID: ${product._id})`);
+                    await productService.updateProduct(product._id);
+                } catch (error) {
+                    console.error(`Error updating product ${product._id}: ${error.message}`);
+                    // The error logging (with screenshot) is handled inside the scraper,
+                    // so here we just need to mark the product as errored.
+                    await Product.findByIdAndUpdate(product._id, { status: 'ERROR' });
+                }
+            })()
+        );
+
+        await Promise.all(updatePromises);
         
         console.log(`Finished scheduled job. Total time: ${(new Date() - jobStartTime) / 1000}s`);
 
