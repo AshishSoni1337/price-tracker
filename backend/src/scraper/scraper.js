@@ -1,5 +1,5 @@
 import ErrorLog from '../models/errorLog.js';
-import { browserManager } from '../utils/browserManager.js';
+import { withPage } from '../services/browserManager.js';
 
 async function solveCaptchaIfNeeded(page) {
     const isCaptchaVisible = await page.evaluate(() => {
@@ -61,7 +61,7 @@ async function handleInterstitialPage(page, selectors) {
 }
 
 async function scrapeProductPage(url, selectors) {
-    return browserManager.withPage(async (page) => {
+    return withPage(async (page) => {
         try {
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
             

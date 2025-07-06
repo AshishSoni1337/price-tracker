@@ -1,6 +1,7 @@
 import playwright from 'playwright-extra';
 import stealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { USER_AGENTS, MAX_CONCURRENT_TABS } from '../config/appConfig.js';
+import UserAgent from 'user-agents';
+import { MAX_CONCURRENT_TABS } from '../config/appConfig.js';
 
 const stealth = stealthPlugin();
 playwright.chromium.use(stealth);
@@ -9,7 +10,7 @@ let browser = null;
 let activeTabCount = 0;
 const requestQueue = [];
 
-async function initBrowser() {
+export async function initBrowser() {
     if (browser) return;
     const { PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD, NODE_ENV } = process.env;
 
@@ -33,14 +34,14 @@ async function initBrowser() {
     });
 }
 
-async function closeBrowser() {
+export async function closeBrowser() {
     if (browser) {
         await browser.close();
         browser = null;
     }
 }
 
-async function withPage(fn) {
+export async function withPage(fn) {
     if (activeTabCount >= MAX_CONCURRENT_TABS) {
         await new Promise(resolve => requestQueue.push(resolve));
     }
@@ -50,8 +51,11 @@ async function withPage(fn) {
         await initBrowser();
     }
 
-    const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-    const context = await browser.newContext({ userAgent });
+    const userAgent = new UserAgent(data => {
+        const ua = data.userAgent.toLowerCase();
+        return ua.includes('chrome/') && !ua.includes('edg/');
+    });
+    const context = await browser.newContext({ userAgent: userAgent.toString() });
     const page = await context.newPage();
 
     try {
@@ -65,9 +69,3 @@ async function withPage(fn) {
         }
     }
 }
-
-export const browserManager = {
-    initBrowser,
-    closeBrowser,
-    withPage,
-}; 

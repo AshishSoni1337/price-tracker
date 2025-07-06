@@ -1,7 +1,7 @@
 import { Product } from '../models/product.js';
 import { scrapeProductPage } from '../scraper/scraper.js';
 import { getProductPageSelectors } from '../scraper/selectors.js';
-import { queryApi, writeApi, bucket } from '../config/influxdb.js';
+import { bucket, queryApi, writeApi } from '../config/influxdb.js';
 import { Point } from '@influxdata/influxdb-client';
 import { ValidationError, DuplicateError, ScrapingError, NotFoundError } from '../utils/errors.js';
 
@@ -113,6 +113,8 @@ async function updateProduct(productId) {
     product.description = description;
     product.images = images;
     product.lastScrapedAt = new Date();
+    product.status = 'ACTIVE';
+    product.retryCount = 0;
 
     // Check if the price has changed
     if (price && price !== product.currentPrice) {

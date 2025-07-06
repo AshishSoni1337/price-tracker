@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { Product } from '../models/product.js';
 import { productService } from '../services/productService.js';
-import { MAX_CONCURRENT_TABS } from '../config/appConfig.js';
+import { MAX_CONCURRENT_TABS, MAX_SCRAPE_RETRIES } from '../config/appConfig.js';
 
 // This is our main price tracking job
 cron.schedule('* * * * *', async () => {
@@ -9,7 +9,7 @@ cron.schedule('* * * * *', async () => {
     console.log(`[${jobStartTime.toISOString()}] Running scheduled price tracking job...`);
     
     try {
-        const productsToTrack = await Product.find({ status: 'ACTIVE' }).select('_id name');
+        const productsToTrack = await Product.find({ status: 'ACTIVE' }).select('_id name retryCount');
         
         if (productsToTrack.length === 0) {
             console.log('No active products to track.');
@@ -25,9 +25,16 @@ cron.schedule('* * * * *', async () => {
                     await productService.updateProduct(product._id);
                 } catch (error) {
                     console.error(`Error updating product ${product._id}: ${error.message}`);
-                    // The error logging (with screenshot) is handled inside the scraper,
-                    // so here we just need to mark the product as errored.
-                    await Product.findByIdAndUpdate(product._id, { status: 'ERROR' });
+                    
+                    const newRetryCount = (product.retryCount || 0) + 1;
+                    
+                    if (newRetryCount >= MAX_SCRAPE_RETRIES) {
+                        await Product.findByIdAndUpdate(product._id, { status: 'ERROR', retryCount: newRetryCount });
+                        console.error(`Product ${product.name} (${product._id}) failed after ${newRetryCount} attempts. Setting status to ERROR.`);
+                    } else {
+                        await Product.findByIdAndUpdate(product._id, { retryCount: newRetryCount });
+                        console.log(`Product ${product.name} (${product._id}) failed to update. Retry attempt ${newRetryCount} of ${MAX_SCRAPE_RETRIES}.`);
+                    }
                 }
             })()
         );

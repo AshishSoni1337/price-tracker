@@ -1,13 +1,14 @@
 import 'dotenv/config';
-import './config/db.js';
-import './config/influxdb.js';
 import express from 'express';
 import cors from 'cors';
-import './cron/scheduler.js';
+
+import './config/db.js';
+import './config/influxdb.js';
 import productRoutes from './routes/products.js';
 import errorLogRoutes from './routes/errors.js';
-import { browserManager } from './utils/browserManager.js';
+import { initBrowser, closeBrowser } from './services/browserManager.js';
 import { PORT, CORS_ALLOWED_ORIGINS } from './config/appConfig.js';
+import './cron/scheduler.js';
 
 const app = express();
 
@@ -39,7 +40,7 @@ app.use('/api/errors', errorLogRoutes);
 
 async function startServer() {
     try {
-        await browserManager.initBrowser();
+        await initBrowser();
         console.log('Browser initialized for scraping.');
         app.listen(PORT, () => {
             console.log(`Backend server listening on port ${PORT}`);
@@ -56,7 +57,7 @@ startServer();
 const gracefulShutdown = async () => {
     console.log('Received shutdown signal, cleaning up...');
     try {
-        await browserManager.closeBrowser();
+        await closeBrowser();
         console.log('Browser closed gracefully.');
         process.exit(0);
     } catch (error) {

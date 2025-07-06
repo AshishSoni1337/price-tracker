@@ -24,6 +24,7 @@ const productSchema = new Schema({
         enum: ['ACTIVE', 'PAUSED', 'ERROR'],
         default: 'ACTIVE'
     },
+    retryCount: { type: Number, default: 0 },
     tracking_frequency: { type: String, default: '0 * * * *' }, // Default to every hour
     variations: [{ type: Schema.Types.ObjectId, ref: 'ProductVariation' }]
 }, { timestamps: true });
