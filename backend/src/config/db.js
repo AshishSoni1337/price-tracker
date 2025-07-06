@@ -1,14 +1,36 @@
 import mongoose from "mongoose";
-import "dotenv/config";
+import { MONGODB_URL } from "./appConfig.js";
+import { logger } from "./logger.js";
 
-const connectDB = async () => {
+let isConnected = false;
+
+export const connectDB = async () => {
+    if (isConnected) {
+        logger.info("Database is already connected.");
+        return;
+    }
+
+    if (!MONGODB_URL) {
+        logger.error("MONGODB_URL is not defined in the configuration.");
+        process.exit(1);
+    }
+
     try {
-        const conn = await mongoose.connect(process.env.MONGO_URI);
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
+        const conn = await mongoose.connect(MONGODB_URL);
+        logger.info(`MongoDB Connected: ${conn.connection.host}`);
+        isConnected = true;
     } catch (error) {
-        console.error(`Error connecting to MongoDB: ${error.message}`);
+        logger.error(`Error connecting to MongoDB: ${error.message}`);
         process.exit(1);
     }
 };
 
-connectDB();
+export const disconnectDB = async () => {
+    if (!isConnected) {
+        logger.info("Database is not connected.");
+        return;
+    }
+    await mongoose.disconnect();
+    isConnected = false;
+    logger.info("MongoDB disconnected.");
+};

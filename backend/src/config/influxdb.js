@@ -1,19 +1,26 @@
-import { InfluxDB } from '@influxdata/influxdb-client';
-import 'dotenv/config';
+import { InfluxDB } from "@influxdata/influxdb-client";
+import {
+    INFLUX_URL,
+    INFLUX_TOKEN,
+    INFLUX_ORG,
+    INFLUX_BUCKET,
+} from "./appConfig.js";
+import { logger } from "./logger.js";
 
-const url = process.env.INFLUXDB_URL;
-const token = process.env.INFLUXDB_TOKEN;
-const org = process.env.INFLUXDB_ORG;
-export const bucket = process.env.INFLUXDB_BUCKET;
+let writeApi = null;
+let queryApi = null;
+let bucket = null;
 
-if (!url || !token || !org || !bucket) {
-    console.error("InfluxDB environment variables not set. Please check your .env file.");
-    process.exit(1); 
+if (!INFLUX_URL || !INFLUX_TOKEN || !INFLUX_ORG || !INFLUX_BUCKET) {
+    logger.error("InfluxDB environment variables not set. Please check your config.");
+    process.exit(1);
 }
 
-const client = new InfluxDB({ url, token });
+const client = new InfluxDB({ url: INFLUX_URL, token: INFLUX_TOKEN });
+writeApi = client.getWriteApi(INFLUX_ORG, INFLUX_BUCKET);
+queryApi = client.getQueryApi(INFLUX_ORG);
+bucket = INFLUX_BUCKET;
 
-export const writeApi = client.getWriteApi(org, bucket);
-export const queryApi = client.getQueryApi(org);
+logger.info("InfluxDB client configured successfully.");
 
-console.log('InfluxDB client configured.'); 
+export { writeApi, queryApi, bucket };

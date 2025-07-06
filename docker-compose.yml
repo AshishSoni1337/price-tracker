@@ -23,15 +23,24 @@ services:
     ports:
       - "5001:5001"
       - "9229:9229" # Expose debugger
-    depends_on: []
+    depends_on:
+      - redis
     networks:
       - app-network
     volumes:
       - ./backend:/app
       - /app/node_modules
 
+  redis:
+    image: "redis:alpine"
+    networks:
+      - app-network
+    volumes:
+      - redis-data:/data
+
 networks:
   app-network:
     driver: bridge
 
-volumes: {}
+volumes:
+  redis-data: {}
