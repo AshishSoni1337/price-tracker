@@ -1,7 +1,7 @@
 import playwright from 'playwright-extra';
 import stealthPlugin from 'puppeteer-extra-plugin-stealth';
 import UserAgent from 'user-agents';
-import { MAX_CONCURRENT_TABS } from '../config/appConfig.js';
+import { MAX_CONCURRENT_TABS, HEADLESS } from '../config/appConfig.js';
 
 const stealth = stealthPlugin();
 playwright.chromium.use(stealth);
@@ -12,10 +12,10 @@ const requestQueue = [];
 
 export async function initBrowser() {
     if (browser) return;
-    const { PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD, NODE_ENV } = process.env;
+    const { PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD } = process.env;
 
     const launchOptions = {
-        headless: NODE_ENV === 'production',
+        headless: HEADLESS,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     };
 
