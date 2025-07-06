@@ -5,13 +5,13 @@ services:
     build: ./frontend
     ports:
       - "3000:3000"
+    env_file:
+      - ./frontend/.env
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
     depends_on:
-      - backend
-    links:
       - backend
     networks:
       - app-network
@@ -34,4 +34,4 @@ networks:
   app-network:
     driver: bridge
 
-volumes: {} 
+volumes: {}
