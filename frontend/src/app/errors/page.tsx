@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getErrorLogs, getErrorLogDetails } from '@/services/errorLogService';
-import type { ErrorLog, ErrorLogDetails, GetErrorsParams } from '@/services/errorLogService';
+import type { ErrorLog, ErrorLogDetails, GetErrorsParams } from '@/types';
 import { API_BASE_URL } from '@/utils/api';
 import { ExternalLink, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
 

@@ -1,35 +1,16 @@
-import api from '@/utils/api';
+import api from "@/utils/api";
+import type {
+    PaginatedErrorResponse,
+    GetErrorsParams,
+    ErrorLogDetails,
+} from "@/types";
 
-export interface ErrorLog {
-    _id: string;
-    errorMessage: string;
-    url: string;
-    timestamp: string;
+export function getErrorLogs(
+    params: GetErrorsParams = {}
+): Promise<PaginatedErrorResponse> {
+    return api.get("/api/errors", { params });
 }
 
-export interface PaginatedErrorResponse {
-    errors: ErrorLog[];
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
+export function getErrorLogDetails(id: string): Promise<ErrorLogDetails> {
+    return api.get(`/api/errors/${id}`);
 }
-
-export interface ErrorLogDetails extends ErrorLog {
-    stackTrace: string;
-    screenshot?: string; // The backend sends a buffer, but we'll handle the URL to it
-}
-
-export interface GetErrorsParams {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    order?: 'asc' | 'desc';
-}
-
-export async function getErrorLogs(params: GetErrorsParams = {}): Promise<PaginatedErrorResponse> {
-    return await api.get('/api/errors', { params });
-}
-
-export async function getErrorLogDetails(id: string): Promise<ErrorLogDetails> {
-    return await api.get(`/api/errors/${id}`);
-} 

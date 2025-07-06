@@ -1,28 +1,22 @@
-import type { Product, ProductDetails, PriceHistoryPoint } from '@/types';
-import api from '@/utils/api';
+import api from "@/utils/api";
+import type { Product, ProductDetails, PriceHistoryPoint } from "@/types";
 
-export async function getProducts(): Promise<Product[]> {
-  return await api.get('/api/products');
+export function getProducts(): Promise<Product[]> {
+    return api.get("/api/products");
 }
 
-export async function getProductById(id: string): Promise<ProductDetails> {
-  return await api.get(`/api/products/${id}`);
+export function getProductById(id: string): Promise<ProductDetails> {
+    return api.get(`/api/products/${id}`);
 }
 
-export async function getProductHistory(id: string): Promise<PriceHistoryPoint[]> {
-  try {
-    return await api.get(`/api/products/${id}/history`);
-  } catch (error) {
-    // Not a critical error, so we can return an empty array
-    console.warn('Could not fetch price history:', error);
-    return [];
-  }
+export function getProductHistory(id: string): Promise<PriceHistoryPoint[]> {
+    return api.get(`/api/products/${id}/history`);
 }
 
-export async function addProduct(url: string): Promise<Product> {
-  return await api.post('/api/products', { url });
+export function addProduct(url: string): Promise<Product> {
+    return api.post("/api/products", { url });
 }
 
-export async function updateProductStatus(id: string, status: 'ACTIVE' | 'PAUSED'): Promise<Product> {
-  return await api.patch(`/api/products/${id}/status`, { status });
-} 
+export function updateProductStatus(id: string, status: "ACTIVE" | "PAUSED"): Promise<Product> {
+    return api.patch(`/api/products/${id}/status`, { status });
+}
