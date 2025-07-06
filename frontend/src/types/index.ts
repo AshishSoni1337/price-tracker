@@ -24,6 +24,7 @@ export type ProductDetails = {
   description: string;
   url: string;
   images: string[];
+  currentPrice: number;
   status: 'ACTIVE' | 'PAUSED' | 'ERROR';
   variations: Variation[];
 };
