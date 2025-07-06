@@ -1,3 +1,4 @@
+import { logger } from '../config/logger.js';
 import ErrorLog from '../models/errorLog.js';
 import { withPage } from '../services/browserManager.js';
 
@@ -8,13 +9,13 @@ async function solveCaptchaIfNeeded(page) {
     });
 
     if (isCaptchaVisible) {
-        console.log('CAPTCHA detected. This is a placeholder for solving logic.');
+        logger.warn('CAPTCHA detected. This is a placeholder for solving logic.');
         await new Promise(resolve => setTimeout(resolve, 5000));
     }
 }
 
 async function simulateHumanBehavior(page) {
-    console.log('Simulating human behavior...');
+    logger.info('Simulating human behavior...');
     await page.mouse.move(Math.random() * 800 + 100, Math.random() * 600 + 100);
     await page.waitForTimeout(Math.random() * 500 + 300);
     const viewportHeight = page.viewportSize()?.height || 768;
@@ -23,7 +24,7 @@ async function simulateHumanBehavior(page) {
         await page.waitForTimeout(Math.random() * 400 + 200);
     }
     await page.mouse.move(Math.random() * 800 + 100, Math.random() * 600 + 100);
-    console.log('Human behavior simulation complete.');
+    logger.info('Human behavior simulation complete.');
 }
 
 async function handleInterstitialPage(page, selectors) {
@@ -31,12 +32,12 @@ async function handleInterstitialPage(page, selectors) {
         return; // No interstitial selectors to check for this site.
     }
 
-    console.log('Checking for interstitial page...');
+    logger.info('Checking for interstitial page...');
     for (const selector of selectors) {
         try {
             const button = await page.waitForSelector(selector, { state: 'visible', timeout: 3000 });
             if (button) {
-                console.log(`Interstitial button found with selector: "${selector}". Clicking...`);
+                logger.info(`Interstitial button found with selector: "${selector}". Clicking...`);
                 
                 // Add a human-like delay
                 const delay = Math.random() * 2000 + 1000; // 1-3 seconds
@@ -46,18 +47,18 @@ async function handleInterstitialPage(page, selectors) {
                     page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
                     button.click(),
                 ]);
-                console.log('Successfully navigated past interstitial page.');
+                logger.info('Successfully navigated past interstitial page.');
                 return; // Stop after handling one interstitial.
             }
         } catch (error) {
             // This is expected if the button is not found within the timeout.
             // We can ignore timeout errors and continue.
             if (!error.message.includes('timeout')) {
-                console.warn(`An error occurred while checking for interstitial selector "${selector}":`, error.message);
+                logger.warn(`An error occurred while checking for interstitial selector "${selector}":`, error.message);
             }
         }
     }
-    console.log('No interstitial page found.');
+    logger.info('No interstitial page found.');
 }
 
 async function scrapeProductPage(url, selectors) {
@@ -131,13 +132,13 @@ async function scrapeProductPage(url, selectors) {
             // Variation scraping placeholder
             const variations = [];
             if (selectors.variationContainerSelector && selectors.variationOptionSelector) {
-                console.log('Variation selectors found, but this logic is a placeholder.');
+                logger.info('Variation selectors found, but this logic is a placeholder.');
             }
 
             return { ...details, variations };
 
         } catch (error) {
-            console.error(`Error during product page scrape on ${url}:`, error.message);
+            logger.error(`Error during product page scrape on ${url}:`, { message: error.message, stack: error.stack });
             const screenshot = await page.screenshot({ fullPage: true });
             await ErrorLog.create({
                 errorMessage: error.message,

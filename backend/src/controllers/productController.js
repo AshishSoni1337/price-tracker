@@ -1,5 +1,5 @@
 import { productService } from '../services/productService.js';
-import { AppError } from '../utils/errors.js';
+import { logger } from '../config/logger.js';
 
 async function createProduct(req, res, next) {
     const { url } = req.body;
@@ -11,7 +11,7 @@ async function createProduct(req, res, next) {
         const newProduct = await productService.trackNewProduct(url);
         res.status(201).json(newProduct);
     } catch (error) {
-        console.error(`[CONTROLLER_ERROR] Failed to create product for URL: ${url}. Reason: ${error.message}`);
+        logger.error(`[CONTROLLER_ERROR] Failed to create product for URL: ${url}. Reason: ${error.message}`);
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
@@ -21,7 +21,7 @@ async function getAllProducts(req, res, next) {
         const products = await productService.getAllTrackedProducts();
         res.json(products);
     } catch (error) {
-        console.error('Error in getAllProducts:', error.message);
+        logger.error('Error in getAllProducts:', error.message);
         res.status(500).json({ message: 'Server error retrieving products.' });
     }
 }
@@ -31,7 +31,7 @@ async function getProductById(req, res, next) {
         const product = await productService.getProductDetails(req.params.id);
         res.json(product);
     } catch (error) {
-        console.error(`Error in getProductById for ${req.params.id}:`, error.message);
+        logger.error(`Error in getProductById for ${req.params.id}:`, { message: error.message });
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
@@ -41,7 +41,7 @@ async function getProductHistory(req, res, next) {
         const data = await productService.getProductPriceHistory(req.params.id);
         res.json(data);
     } catch (error) {
-        console.error(`Error in getProductHistory for ${req.params.id}:`, error.message);
+        logger.error(`Error in getProductHistory for ${req.params.id}:`, { message: error.message });
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
@@ -55,7 +55,7 @@ async function testScrape(req, res, next) {
         const scrapedData = await productService.testScrapeProduct(url);
         res.json(scrapedData);
     } catch (error) {
-        console.error('Error in testScrape:', error.message);
+        logger.error('Error in testScrape:', { message: error.message });
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
@@ -67,7 +67,7 @@ async function updateProductStatus(req, res, next) {
         const updatedProduct = await productService.updateProductStatus(id, status);
         res.json(updatedProduct);
     } catch (error) {
-        console.error(`Error in updateProductStatus for ${req.params.id}:`, error.message);
+        logger.error(`Error in updateProductStatus for ${req.params.id}:`, { message: error.message });
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }

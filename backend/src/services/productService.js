@@ -4,6 +4,7 @@ import { getProductPageSelectors } from '../scraper/selectors.js';
 import { bucket, queryApi, writeApi } from '../config/influxdb.js';
 import { Point } from '@influxdata/influxdb-client';
 import { ValidationError, DuplicateError, ScrapingError, NotFoundError } from '../utils/errors.js';
+import { logger } from '../config/logger.js';
 
 // --- Helper Functions for trackNewProduct ---
 
@@ -47,7 +48,7 @@ async function _saveProductAndPrice(productData) {
         
         writeApi.writePoint(pricePoint);
         await writeApi.flush();
-        console.log(`Initial price for ${newProduct.name} written to InfluxDB.`);
+        logger.info(`Initial price for ${newProduct.name} written to InfluxDB.`);
     }
 
     return newProduct;
@@ -118,7 +119,7 @@ async function updateProduct(productId) {
 
     // Check if the price has changed
     if (price && price !== product.currentPrice) {
-        console.log(`Price changed for ${name}: ${product.currentPrice} -> ${price}`);
+        logger.info(`Price changed for ${name}: ${product.currentPrice} -> ${price}`);
         product.currentPrice = price;
 
         const pricePoint = new Point('price')
@@ -129,9 +130,9 @@ async function updateProduct(productId) {
         writeApi.writePoint(pricePoint);
         await writeApi.flush();
     } else if (price) {
-        console.log(`Price for ${name} has not changed: ${price}`);
+        logger.info(`Price for ${name} has not changed: ${price}`);
     } else {
-        console.warn(`Could not scrape a valid price for ${name}.`);
+        logger.warn(`Could not scrape a valid price for ${name}.`);
     }
 
     await product.save();
@@ -168,7 +169,7 @@ async function getProductPriceHistory(productId) {
                 data.push(o);
             },
             error(error) {
-                console.error('\\nError from InfluxDB query:', error);
+                logger.error('Error from InfluxDB query:', { error });
                 reject(error);
             },
             complete() {

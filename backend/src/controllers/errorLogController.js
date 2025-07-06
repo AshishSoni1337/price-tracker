@@ -1,4 +1,5 @@
 import { errorLogService } from '../services/errorLogService.js';
+import { logger } from '../config/logger.js';
 
 async function getErrors(req, res) {
     try {
@@ -12,7 +13,7 @@ async function getErrors(req, res) {
         const result = await errorLogService.getPaginatedErrors(options);
         res.json(result);
     } catch (error) {
-        console.error('Error in getErrors controller:', error);
+        logger.error('Error in getErrors controller:', error);
         res.status(500).json({ message: 'Server error retrieving error logs.' });
     }
 }
@@ -22,7 +23,7 @@ async function getErrorDetails(req, res) {
         const errorLog = await errorLogService.getErrorById(req.params.id);
         res.json(errorLog);
     } catch (error) {
-        console.error(`Error in getErrorDetails for ${req.params.id}:`, error.message);
+        logger.error(`Error in getErrorDetails for ${req.params.id}:`, error);
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
@@ -36,7 +37,7 @@ async function getErrorScreenshot(req, res) {
         res.set('Content-Type', 'image/png');
         res.send(errorLog.screenshot);
     } catch (error) {
-        console.error(`Error in getErrorScreenshot for ${req.params.id}:`, error.message);
+        logger.error(`Error in getErrorScreenshot for ${req.params.id}:`, error);
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }

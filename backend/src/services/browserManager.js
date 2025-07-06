@@ -2,6 +2,7 @@ import playwright from 'playwright-extra';
 import stealthPlugin from 'puppeteer-extra-plugin-stealth';
 import UserAgent from 'user-agents';
 import { MAX_CONCURRENT_TABS, HEADLESS } from '../config/appConfig.js';
+import { logger } from '../config/logger.js';
 
 const stealth = stealthPlugin();
 playwright.chromium.use(stealth);
@@ -29,7 +30,7 @@ export async function initBrowser() {
 
     browser = await playwright.chromium.launch(launchOptions);
     browser.on('disconnected', () => {
-        console.log('Browser disconnected.');
+        logger.info('Browser disconnected.');
         browser = null;
     });
 }
