@@ -29,6 +29,14 @@ export type ProductDetails = {
   variations: Variation[];
 };
 
+export type DiscoveredProduct = {
+  name: string;
+  price: number | null;
+  description: string;
+  images: string[];
+  uniqueId: string | null;
+};
+
 export interface PriceHistoryPoint {
   _time: string;
   _value: number;

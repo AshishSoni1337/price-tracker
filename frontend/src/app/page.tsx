@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getProducts, updateProductStatus } from '@/services/productService';
 import type { Product } from '@/types';
-import { MoreVertical, Eye, Trash2, PauseCircle, PlayCircle, ExternalLink } from 'lucide-react';
-import { useToast } from '@/app/hooks/useToast';
+import { MoreVertical, Eye, Trash2, PauseCircle, PlayCircle, ExternalLink, PlusCircle } from 'lucide-react';
+import { useToast } from './hooks/useToast';
 
 const StatusBadge = ({ status }: { status: Product['status'] }) => {
     const statusClasses = {
@@ -14,7 +14,7 @@ const StatusBadge = ({ status }: { status: Product['status'] }) => {
         PAUSED: "bg-yellow-100 text-yellow-800",
         ERROR: "bg-red-100 text-red-800",
     };
-    const baseClasses = "px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider";
+    const baseClasses = "px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide";
     return (
         <span className={`${baseClasses} ${statusClasses[status]}`}>
             {status}
@@ -30,48 +30,44 @@ const ProductActions = ({ product, onStatusChange }: { product: Product, onStatu
         setIsOpen(false);
     }
 
+    // Use a portal or a library like Headless UI for production-grade dropdowns
+    // to handle complex positioning and accessibility.
     return (
         <div className="relative">
-            <button 
-                onClick={() => setIsOpen(!isOpen)} 
-                className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            <button
+                onClick={(e) => {
+                    e.preventDefault(); // Prevent link navigation on card click
+                    setIsOpen(!isOpen);
+                }}
+                className="p-2 rounded-full text-gray-500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-                <MoreVertical size={20} className="text-gray-500" />
+                <MoreVertical size={18} />
             </button>
             {isOpen && (
-                <div 
-                    className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+                <div
+                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20"
                     onMouseLeave={() => setIsOpen(false)}
                 >
                     <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                         <Link href={`/products/${product._id}`} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                            <Eye size={16} className="mr-3" /> View Details
+                            <Eye size={16} className="mr-3 text-gray-500" /> View Details
                         </Link>
                         <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                           <ExternalLink size={16} className="mr-3" /> View on Store
+                           <ExternalLink size={16} className="mr-3 text-gray-500" /> View on Store
                         </a>
                         
-                        {product.status === 'ACTIVE' && (
-                            <button onClick={() => handleStatusClick('PAUSED')} className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                <PauseCircle size={16} className="mr-3" /> Pause Tracking
-                            </button>
-                        )}
-                        {product.status === 'PAUSED' && (
-                            <button onClick={() => handleStatusClick('ACTIVE')} className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                <PlayCircle size={16} className="mr-3" /> Activate Tracking
-                            </button>
-                        )}
-                         {product.status === 'ERROR' && (
-                            <>
-                                <button onClick={() => handleStatusClick('ACTIVE')} className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                    <PlayCircle size={16} className="mr-3" /> Reactivate Tracking
-                                </button>
-                                <button onClick={() => handleStatusClick('PAUSED')} className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                    <PauseCircle size={16} className="mr-3" /> Set to Paused
-                                </button>
-                            </>
-                        )}
+                        <div className="border-t my-1"></div>
 
+                        {product.status === 'ACTIVE' ? (
+                            <button onClick={() => handleStatusClick('PAUSED')} className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                <PauseCircle size={16} className="mr-3 text-yellow-500" /> Pause Tracking
+                            </button>
+                        ) : (
+                            <button onClick={() => handleStatusClick('ACTIVE')} className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                <PlayCircle size={16} className="mr-3 text-green-500" /> Activate Tracking
+                            </button>
+                        )}
+                        
                         <div className="border-t my-1"></div>
 
                         <button className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100" role="menuitem">
@@ -85,35 +81,44 @@ const ProductActions = ({ product, onStatusChange }: { product: Product, onStatu
 };
 
 const ProductCard = ({ product, onStatusChange }: { product: Product, onStatusChange: (id: string, status: 'ACTIVE' | 'PAUSED') => void }) => (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out flex flex-col">
-        <Link href={`/products/${product._id}`} className="block h-48 relative">
-            <Image
-                src={product.images[0] || '/placeholder.png'}
-                alt={product.name}
-                layout="fill"
-                objectFit="contain"
-                className="p-4"
-            />
-        </Link>
-        <div className="p-4 flex flex-col flex-grow">
-            <h3 className="text-md font-semibold text-gray-800 mb-2 leading-snug">
-                <Link href={`/products/${product._id}`} title={product.name} className="hover:text-indigo-600 transition-colors">
+    <Link href={`/products/${product._id}`} className="block bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 ease-in-out">
+        <div className="flex flex-col h-full">
+            <div className="relative h-40 sm:h-48">
+                <Image
+                    src={product.images[0] || '/placeholder.png'}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    style={{ objectFit: 'contain' }}
+                    className="p-4"
+                />
+            </div>
+            <div className="p-4 flex flex-col flex-grow border-t border-gray-100">
+                <h3 className="text-sm font-medium text-gray-800 mb-2 leading-snug flex-grow clamp-2">
                     {product.name}
-                </Link>
-            </h3>
-            <div className="mt-auto">
-                <div className="flex justify-between items-center mb-3">
-                    <p className="text-xl font-bold text-gray-900">{product.currentPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</p>
-                    <StatusBadge status={product.status} />
-                </div>
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Added: {new Date(product.createdAt).toLocaleDateString()}</span>
-                    <ProductActions product={product} onStatusChange={onStatusChange} />
+                </h3>
+                <div className="mt-auto">
+                    <div className="flex justify-between items-center mb-2">
+                        <p className="text-lg font-bold text-gray-900">{product.currentPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</p>
+                        <StatusBadge status={product.status} />
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-500">
+                        <span>{new Date(product.createdAt).toLocaleDateString()}</span>
+                        <ProductActions product={product} onStatusChange={onStatusChange} />
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </Link>
 );
+
+const SkeletonCard = () => (
+    <div className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
+        <div className="h-40 sm:h-48 bg-gray-200 rounded mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+    </div>
+)
 
 
 export default function HomePage() {
@@ -128,11 +133,7 @@ export default function HomePage() {
         const data = await getProducts();
         setProducts(data);
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('An unknown error occurred.');
-        }
+        setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       } finally {
         setIsLoading(false);
       }
@@ -153,19 +154,19 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-        <div className="container mx-auto p-4 md:p-6">
-            <h1 className="text-3xl font-bold mb-8 text-gray-900">Tracked Products</h1>
+    <main className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Tracked Products</h1>
+                 <Link href="/track-product" className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <PlusCircle size={20} />
+                    <span>Track New Product</span>
+                </Link>
+            </div>
             
             {isLoading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
-                            <div className="h-48 bg-gray-200 rounded mb-4"></div>
-                            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                    ))}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                    {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
                 </div>
             )}
 
@@ -174,23 +175,24 @@ export default function HomePage() {
             {!isLoading && !error && (
                 <>
                     {products.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                             {products.map((product) => (
                                 <ProductCard key={product._id} product={product} onStatusChange={handleStatusChange} />
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-16 px-6 bg-white rounded-lg shadow-md">
-                            <h2 className="text-2xl font-semibold text-gray-700 mb-2">No products yet!</h2>
-                            <p className="text-gray-500 mb-6">Start tracking a product to see it here.</p>
-                            <Link href="/discover" className="inline-block bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">
-                                Track a New Product
+                        <div className="text-center py-12 sm:py-16 px-6 bg-white rounded-lg shadow-sm border border-dashed border-gray-300">
+                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2">No products being tracked.</h2>
+                            <p className="text-gray-500 mb-6 text-sm sm:text-base">Click the button below to add your first product.</p>
+                            <Link href="/track-product" className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <PlusCircle size={20} />
+                                <span>Track a New Product</span>
                             </Link>
                         </div>
                     )}
                 </>
             )}
         </div>
-    </div>
+    </main>
   );
 }
