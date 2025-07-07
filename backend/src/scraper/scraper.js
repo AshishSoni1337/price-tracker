@@ -131,6 +131,22 @@ async function scrapeProductPage(url, selectors) {
                 return { name, price, description, images, uniqueId };
             }, selectors);
 
+            // After scraping, validate essential data
+            if (!details.name || !details.price) {
+                const errorMessage = `Failed to scrape essential data. Name: ${details.name}, Price: ${details.price}`;
+                logger.error(errorMessage, { url });
+                
+                const screenshot = await page.screenshot({ fullPage: true });
+                await ErrorLog.create({
+                    errorMessage: errorMessage,
+                    url: url,
+                    screenshot: screenshot,
+                    stackTrace: new Error(errorMessage).stack // Generate a stack trace
+                });
+
+                throw new ScrapingError(errorMessage);
+            }
+
             // Variation scraping placeholder
             const variations = [];
             if (selectors.variationContainerSelector && selectors.variationOptionSelector) {
@@ -193,7 +209,6 @@ export async function scrapeDiscoveryPage(page, url) {
       const products = [];
 
       productNodes.forEach(node => {
-        debugger;
         const name = querySelectorWithFallbacks(node, s.nameSelector)?.innerText.trim() || null;
         const priceString = querySelectorWithFallbacks(node, s.priceSelector)?.innerText.trim() || null;
         const url = querySelectorWithFallbacks(node, s.linkSelector)?.href || null;
