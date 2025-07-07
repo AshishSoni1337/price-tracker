@@ -14,7 +14,7 @@ const ScrapedProductCard = ({ product, onConfirm, isAdding }: { product: Discove
     <div className="bg-white rounded-lg shadow-md overflow-hidden animate-fade-in-up border">
         <div className="relative h-48 sm:h-64 w-full">
             <Image
-                src={product.images[0] || '/placeholder.png'}
+                src={product.image || '/placeholder.png'}
                 alt={product.name}
                 fill
                 style={{objectFit: 'contain'}}

@@ -27,15 +27,13 @@ const DiscoveredProductCard = ({
             rel="noopener noreferrer"
             className="block relative h-48 sm:h-56 w-full"
         >
-            {product.image && (
-                <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    style={{ objectFit: "contain" }}
-                    className="p-4"
-                />
-            )}
+            <Image
+                src={product.image || '/placeholder.png'}
+                alt={product.name}
+                fill
+                style={{ objectFit: "contain" }}
+                className="p-4"
+            />
         </a>
         <div className="p-4 flex flex-col flex-grow">
             <h3
