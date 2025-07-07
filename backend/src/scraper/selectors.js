@@ -2,10 +2,7 @@ const amazonSelectors = {
     product: {
         nameSelector: ["#productTitle"],
         priceSelector: [
-            "#centerCol .a-price-whole",
-            ".a-price-whole",
-            "span.a-offscreen",
-            ".a-price .a-offscreen",
+            "#centerCol .a-price-whole"
         ],
         descriptionSelector: ["#feature-bullets"],
         imageSelector: ["#landingImage"],
@@ -23,13 +20,9 @@ const amazonSelectors = {
         productListSelector: "div.s-card-container",
         nameSelector: [
             "a.a-link-normal h2 span",
-            "#productTitle",
-            "h2 a span.a-text-normal",
         ],
         priceSelector: [
             ".a-price-whole",
-            "span.a-offscreen",
-            ".a-price .a-offscreen",
         ],
         linkSelector: "a.a-link-normal",
         imageSelector: ["img.s-image"],

@@ -119,12 +119,20 @@ async function updateProduct(productId) {
 
     const isUpdatedToday = product.lastScrapedAt?.toDateString() === new Date().toDateString();
 
+    // ANSI color codes
+    const colors = {
+        green: '\x1b[32m',
+        yellow: '\x1b[33m',
+        cyan: '\x1b[36m',
+        reset: '\x1b[0m'
+    };
+
     // Check if the price has changed OR if it's the first scrape of the day
     if (price && (price !== product.currentPrice || !isUpdatedToday)) {
         if (price !== product.currentPrice) {
-            logger.info(`Price changed for ${name}: ${product.currentPrice} -> ${price}`);
+            logger.info(`Price changed for ${product.name}: ${colors.yellow}${product.currentPrice}${colors.reset} -> ${colors.green}${price}${colors.reset}`);
         } else {
-            logger.info(`Price for ${name} is the same, recording daily price point.`);
+            logger.info(`Price for ${product.name} is the same, recording daily price point: ${colors.cyan}${price}${colors.reset}`);
         }
         product.currentPrice = price;
 
@@ -136,9 +144,9 @@ async function updateProduct(productId) {
         writeApi.writePoint(pricePoint);
         await writeApi.flush();
     } else if (price) {
-        logger.info(`Price for ${name} has not changed and was already updated today: ${price}`);
+        logger.info(`Price for ${product.name} has not changed and was already updated today: ${colors.cyan}${price}${colors.reset}`);
     } else {
-        logger.warn(`Could not scrape a valid price for ${name}.`);
+        logger.warn(`Could not scrape a valid price for ${product.name}.`);
     }
 
     product.lastScrapedAt = new Date();
