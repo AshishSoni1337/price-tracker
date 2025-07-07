@@ -1,6 +1,8 @@
 import { logger } from '../config/logger.js';
 import ErrorLog from '../models/errorLog.js';
 import { withPage } from '../services/browserManager.js';
+import { ScrapingError } from '../utils/errors.js';
+import { getDiscoveryPageSelectors } from './selectors.js';
 
 async function solveCaptchaIfNeeded(page) {
     const isCaptchaVisible = await page.evaluate(() => {
@@ -154,3 +156,70 @@ async function scrapeProductPage(url, selectors) {
 export {
     scrapeProductPage,
 };
+
+/**
+ * Scrapes a discovery (search result) page to extract a list of products.
+ * @param {import('playwright').Page} page - The Playwright page object.
+ * @param {string} url - The URL of the discovery page.
+ * @returns {Promise<object[]>} An array of objects, each representing a discovered product.
+ */
+export async function scrapeDiscoveryPage(page, url) {
+  // Forward browser console logs to the Node.js console
+  page.on('console', msg => logger.info(`[BROWSER CONSOLE] ${msg.text()}`));
+    
+  try {
+    logger.info(`Navigating to discovery URL: ${url}`);
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+    const selectors = getDiscoveryPageSelectors(url);
+    if (!selectors) {
+      throw new Error(`Could not find discovery page selectors for URL: ${url}`);
+    }
+
+    // Wait for the list of products to be present on the page.
+    await page.waitForSelector(selectors.productListSelector, { timeout: 15000 });
+
+    const discoveredProducts = await page.evaluate((s) => {
+      function querySelectorWithFallbacks(baseElement, selectors) {
+          if (!Array.isArray(selectors)) selectors = [selectors];
+          for (const selector of selectors) {
+              const element = baseElement.querySelector(selector);
+              if (element) return element;
+          }
+          return null;
+      }
+
+      const productNodes = document.querySelectorAll(s.productListSelector);
+      const products = [];
+
+      productNodes.forEach(node => {
+        debugger;
+        const name = querySelectorWithFallbacks(node, s.nameSelector)?.innerText.trim() || null;
+        const priceString = querySelectorWithFallbacks(node, s.priceSelector)?.innerText.trim() || null;
+        const url = querySelectorWithFallbacks(node, s.linkSelector)?.href || null;
+        const image = querySelectorWithFallbacks(node, s.imageSelector)?.src || null;
+
+        if (name && priceString && url) {
+          const priceMatch = priceString.replace(/[^0-9.]/g, '').match(/[\d,]+\.?\d*/);
+          const price = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : null;
+
+          products.push({ name, price, url, image });
+        }
+      });
+      return products;
+    }, selectors);
+
+    logger.info(`Discovered ${discoveredProducts.length} products from URL: ${url}`);
+    
+    if (discoveredProducts.length === 0) {
+      logger.warn(`No products found on ${url}. The selector might be outdated.`);
+    }
+
+    return discoveredProducts;
+
+  } catch (error) {
+    const errorMessage = `Error scraping discovery page ${url}: ${error.message}`;
+    logger.error(errorMessage);
+    throw new ScrapingError(errorMessage, { cause: error });
+  }
+}

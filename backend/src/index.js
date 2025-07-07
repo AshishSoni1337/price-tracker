@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./config/env.js";
 import express from "express";
 import cors from "cors";
 
@@ -7,7 +7,11 @@ import "./config/influxdb.js";
 import productRoutes from "./routes/products.js";
 import errorLogRoutes from "./routes/errors.js";
 import { initBrowser, closeBrowser } from "./services/browserManager.js";
-import { PORT, CORS_ALLOWED_ORIGINS } from "./config/appConfig.js";
+import {
+    PORT,
+    CORS_ALLOWED_ORIGINS,
+    ENABLE_SCRAPING_WORKER,
+} from "./config/appConfig.js";
 import { initScheduledJobs } from "./cron/scheduler.js";
 import { logger } from "./config/logger.js";
 import { createScrapingWorker } from "./config/queue.js";
@@ -61,8 +65,18 @@ async function startServer() {
     try {
         await connectDB();
         await initBrowser();
-        initScheduledJobs();
-        startWorker();
+
+        if (ENABLE_SCRAPING_WORKER) {
+            logger.info(
+                "Scraping worker is enabled. Initializing scheduled jobs and worker..."
+            );
+            initScheduledJobs();
+            startWorker();
+        } else {
+            logger.info(
+                "Scraping worker is disabled. Skipping initialization."
+            );
+        }
 
         app.listen(PORT, () => {
             logger.info(`Backend server listening on port ${PORT}`);

@@ -1,10 +1,11 @@
 import { Product } from '../models/product.js';
-import { scrapeProductPage } from '../scraper/scraper.js';
+import { scrapeProductPage, scrapeDiscoveryPage } from '../scraper/scraper.js';
 import { getProductPageSelectors } from '../scraper/selectors.js';
 import { bucket, queryApi, writeApi } from '../config/influxdb.js';
 import { Point } from '@influxdata/influxdb-client';
 import { ValidationError, DuplicateError, ScrapingError, NotFoundError } from '../utils/errors.js';
 import { logger } from '../config/logger.js';
+import { withPage } from '../services/browserManager.js';
 
 // --- Helper Functions for trackNewProduct ---
 
@@ -107,12 +108,12 @@ async function updateProduct(productId) {
         throw new ScrapingError(`No selectors found for ${product.url}, cannot update.`);
     }
 
-    const { name, price, description, images, uniqueId } = await _scrapeAndValidateData(product.url, selectors);
+    const { name, price, description, images } = await _scrapeAndValidateData(product.url, selectors);
 
     // Update product fields
-    product.name = name;
-    product.description = description;
-    product.images = images;
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.images = images || product.images;
     product.lastScrapedAt = new Date();
     product.status = 'ACTIVE';
     product.retryCount = 0;
@@ -195,6 +196,48 @@ async function updateProductStatus(id, status) {
     return product;
 }
 
+// --- Discovery Service Functions ---
+
+const buildSearchUrl = (platform, query) => {
+    switch (platform) {
+        case 'amazon':
+            return `https://www.amazon.in/s?k=${encodeURIComponent(query)}`;
+        case 'flipkart':
+            return `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
+        default:
+            return null;
+    }
+};
+
+async function discoverProducts(platform, query) {
+    if (!platform || !query) {
+        throw new ValidationError('Platform and search query are required.');
+    }
+
+    const searchUrl = buildSearchUrl(platform, query);
+    if (!searchUrl) {
+        throw new ValidationError('The selected platform is not supported for discovery.');
+    }
+
+    const discoveredItems = await withPage(page => scrapeDiscoveryPage(page, searchUrl));
+
+    if (discoveredItems.length === 0) {
+        return [];
+    }
+
+    // Check which of the discovered products are already being tracked
+    const discoveredUrls = discoveredItems.map(item => item.url);
+    const trackedProducts = await Product.find({ url: { $in: discoveredUrls } }).select('url');
+    const trackedUrls = new Set(trackedProducts.map(p => p.url));
+
+    const results = discoveredItems.map(item => ({
+        ...item,
+        isTracked: trackedUrls.has(item.url),
+    }));
+
+    return results;
+}
+
 export const productService = {
     trackNewProduct,
     getAllTrackedProducts,
@@ -203,4 +246,5 @@ export const productService = {
     testScrapeProduct,
     updateProduct,
     updateProductStatus,
+    discoverProducts,
 }; 

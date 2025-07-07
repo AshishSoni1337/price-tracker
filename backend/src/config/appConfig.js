@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 // Server Configuration
 export const PORT = process.env.PORT || 5001;
 export const MONGODB_URL = process.env.MONGO_URI;
@@ -24,3 +22,7 @@ export const INFLUX_URL = process.env.INFLUXDB_URL;
 export const INFLUX_TOKEN = process.env.INFLUXDB_TOKEN;
 export const INFLUX_ORG = process.env.INFLUXDB_ORG;
 export const INFLUX_BUCKET = process.env.INFLUXDB_BUCKET;
+
+// Worker Configuration
+export const ENABLE_SCRAPING_WORKER =
+    process.env.ENABLE_SCRAPING_WORKER === "true";

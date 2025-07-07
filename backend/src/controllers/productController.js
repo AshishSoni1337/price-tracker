@@ -55,7 +55,7 @@ async function testScrape(req, res, next) {
         const scrapedData = await productService.testScrapeProduct(url);
         res.json(scrapedData);
     } catch (error) {
-        logger.error('Error in testScrape:', { message: error.message });
+        logger.error(`[CONTROLLER] Failed to test scrape for URL ${url}: ${error.message}`);
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
@@ -72,6 +72,17 @@ async function updateProductStatus(req, res, next) {
     }
 }
 
+async function discoverProducts(req, res) {
+    const { platform, query } = req.body;
+    try {
+        const results = await productService.discoverProducts(platform, query);
+        res.json(results);
+    } catch (error) {
+        logger.error(`[CONTROLLER] Failed to discover products for query "${query}" on platform "${platform}": ${error.message}`);
+        res.status(error.statusCode || 500).json({ message: error.message });
+    }
+}
+
 export const productController = {
     createProduct,
     getAllProducts,
@@ -79,4 +90,5 @@ export const productController = {
     getProductHistory,
     testScrape,
     updateProductStatus,
+    discoverProducts,
 }; 

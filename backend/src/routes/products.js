@@ -27,6 +27,11 @@ router.get('/:id/history', productController.getProductHistory);
 // @access  Public
 router.post('/test-scrape', productController.testScrape);
 
+// @route   POST api/products/discover
+// @desc    Discover new products
+// @access  Public
+router.post('/discover', productController.discoverProducts);
+
 // @route   PATCH api/products/:id/status
 // @desc    Update a product's status
 // @access  Public

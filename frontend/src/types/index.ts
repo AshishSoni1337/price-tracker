@@ -32,9 +32,8 @@ export type ProductDetails = {
 export type DiscoveredProduct = {
     name: string;
     price: number | null;
-    description: string;
-    images: string[];
-    uniqueId: string | null;
+    url: string;
+    image: string | null;
 };
 
 export interface PriceHistoryPoint {
@@ -46,9 +45,15 @@ export interface PriceHistoryPoint {
 
 export interface ErrorLog {
     _id: string;
-    errorMessage: string;
-    url: string;
-    timestamp: string;
+    message: string;
+    stack: string;
+    componentStack?: string;
+    url?: string;
+    method?: string;
+    statusCode?: number;
+    errorType: 'frontend' | 'backend';
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface PaginatedErrorResponse {

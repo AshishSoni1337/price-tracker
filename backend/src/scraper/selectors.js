@@ -1,7 +1,7 @@
 const amazonSelectors = {
     product: {
         nameSelector: ['#productTitle'],
-        priceSelector: ['span.a-offscreen', '.a-price .a-offscreen'],
+        priceSelector: ['a-price-whole','span.a-offscreen', '.a-price .a-offscreen'],
         descriptionSelector: ['#feature-bullets'],
         imageSelector: ['#landingImage'],
         // This is now handled by custom logic in the scraper
@@ -12,10 +12,10 @@ const amazonSelectors = {
         interstitialButtonSelectors: ['button:has-text("Continue shopping")', 'input[value="Continue shopping"]'],
     },
     discovery: {
-        productListSelector: 'div[data-component-type="s-search-result"]',
-        nameSelector: ['h2 a.a-link-normal'],
-        priceSelector: ['span.a-price'],
-        linkSelector: 'h2 a.a-link-normal',
+        productListSelector: 'div.s-card-container',
+        nameSelector: ['a.a-link-normal h2 span', '#productTitle', 'h2 a span.a-text-normal'],
+        priceSelector: ['a-price-whole','span.a-offscreen', '.a-price .a-offscreen'],
+        linkSelector: 'a.a-link-normal',
         imageSelector: ['img.s-image'],
         nextButtonSelector: 'a.s-pagination-item.s-pagination-next'
     }
