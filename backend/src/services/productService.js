@@ -114,11 +114,10 @@ async function updateProduct(productId) {
     product.name = name || product.name;
     product.description = description || product.description;
     product.images = images || product.images;
-    product.lastScrapedAt = new Date();
     product.status = 'ACTIVE';
     product.retryCount = 0;
 
-    const isUpdatedToday = product.lastScrapedAt.toDateString() === new Date().toDateString();
+    const isUpdatedToday = product.lastScrapedAt?.toDateString() === new Date().toDateString();
 
     // Check if the price has changed OR if it's the first scrape of the day
     if (price && (price !== product.currentPrice || !isUpdatedToday)) {
@@ -142,6 +141,7 @@ async function updateProduct(productId) {
         logger.warn(`Could not scrape a valid price for ${name}.`);
     }
 
+    product.lastScrapedAt = new Date();
     await product.save();
     return product;
 }
