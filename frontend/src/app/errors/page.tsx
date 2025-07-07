@@ -21,7 +21,7 @@ const ErrorDetailsModal = ({ errorDetails, onClose }: { errorDetails: ErrorLogDe
                 <div className="space-y-6">
                     <div>
                         <h3 className="font-semibold text-gray-600 text-sm mb-1">Message</h3>
-                        <p className="text-red-700 bg-red-50 p-3 rounded-lg font-mono text-sm">{errorDetails.errorMessage}</p>
+                        <p className="text-red-700 bg-red-50 p-3 rounded-lg font-mono text-sm">{errorDetails.message}</p>
                     </div>
                     <div>
                         <h3 className="font-semibold text-gray-600 text-sm mb-1">URL</h3>
@@ -160,7 +160,7 @@ export default function ErrorsPage() {
                                     {errorLogs.map((log) => (
                                         <tr key={log._id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 max-w-sm break-words">
-                                                <p className="text-sm font-medium text-red-600" title={log.errorMessage}>{log.errorMessage}</p>
+                                                <p className="text-sm font-medium text-red-600" title={log.message}>{log.message}</p>
                                             </td>
                                             <td className="px-6 py-4 max-w-sm break-words">
                                                 <a href={log.url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 hover:text-indigo-600" title={log.url}>
@@ -168,7 +168,7 @@ export default function ErrorsPage() {
                                                 </a>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {new Date(log.timestamp).toLocaleString()}
+                                                {new Date(log.createdAt).toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <button onClick={() => handleViewDetails(log._id)} className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
