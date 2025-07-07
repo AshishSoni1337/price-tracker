@@ -32,27 +32,47 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
+  const [range, setRange] = useState('-30d');
 
   useEffect(() => {
     if (typeof id !== 'string') return;
     
-    const fetchProductAndHistory = async () => {
-      setIsLoading(true);
+    const fetchProductData = async () => {
       try {
-        const [productData, historyData] = await Promise.all([
-          getProductById(id),
-          getProductHistory(id)
-        ]);
+        const productData = await getProductById(id);
         setProduct(productData);
-        setPriceHistory(historyData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-      } finally {
-        setIsLoading(false);
       }
     };
-    fetchProductAndHistory();
+
+    fetchProductData();
   }, [id]);
+
+  useEffect(() => {
+    if (typeof id !== 'string') return;
+
+    const fetchHistoryData = async () => {
+      // Don't set loading for history, to avoid flashing
+      try {
+        const historyData = await getProductHistory(id, range);
+        setPriceHistory(historyData);
+      } catch (err) {
+        // History fetching error is less critical, can be logged or shown subtly
+        console.error("Failed to fetch price history:", err);
+        setPriceHistory([]); // Clear old history
+      }
+    };
+    
+    fetchHistoryData();
+  }, [id, range]);
+
+
+  useEffect(() => {
+    if (product || error) {
+      setIsLoading(false);
+    }
+  }, [product, error]);
 
   if (isLoading) return (
     <div className="bg-gray-50 min-h-screen flex items-center justify-center">
@@ -154,13 +174,36 @@ export default function ProductDetailPage() {
                 </div>
             </div>
 
-            {priceHistory && priceHistory.length > 0 && (
+            {priceHistory && priceHistory.length > 0 ? (
               <div className="mt-8 lg:mt-12 bg-white rounded-lg shadow-md p-6">
-                  <h2 className="font-semibold text-xl text-gray-800 flex items-center mb-4"><TrendingUp size={22} className="mr-2" /> Price History</h2>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                      <h2 className="font-semibold text-xl text-gray-800 flex items-center mb-3 sm:mb-0">
+                          <TrendingUp size={22} className="mr-2" /> Price History
+                      </h2>
+                      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                          {['-7d', '-30d', '-90d', '-365d'].map((r) => (
+                              <button
+                                  key={r}
+                                  onClick={() => setRange(r)}
+                                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${range === r ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                              >
+                                  {r.replace('-', '').replace('d', 'D')}
+                              </button>
+                          ))}
+                      </div>
+                  </div>
                   <div className="h-80">
                       <PriceChart data={priceHistory} />
                   </div>
               </div>
+            ) : (
+                <div className="mt-8 lg:mt-12 bg-white rounded-lg shadow-md p-6">
+                    <h2 className="font-semibold text-xl text-gray-800 flex items-center mb-4"><TrendingUp size={22} className="mr-2" /> Price History</h2>
+                    <div className="text-center py-12">
+                        <p className="text-gray-500">No price history available yet.</p>
+                        <p className="text-sm text-gray-400 mt-2">Check back later after the price has been tracked.</p>
+                    </div>
+                </div>
             )}
         </div>
     </div>

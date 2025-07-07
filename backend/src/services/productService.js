@@ -118,20 +118,26 @@ async function updateProduct(productId) {
     product.status = 'ACTIVE';
     product.retryCount = 0;
 
-    // Check if the price has changed
-    if (price && price !== product.currentPrice) {
-        logger.info(`Price changed for ${name}: ${product.currentPrice} -> ${price}`);
+    const isUpdatedToday = product.lastScrapedAt.toDateString() === new Date().toDateString();
+
+    // Check if the price has changed OR if it's the first scrape of the day
+    if (price && (price !== product.currentPrice || !isUpdatedToday)) {
+        if (price !== product.currentPrice) {
+            logger.info(`Price changed for ${name}: ${product.currentPrice} -> ${price}`);
+        } else {
+            logger.info(`Price for ${name} is the same, recording daily price point.`);
+        }
         product.currentPrice = price;
 
         const pricePoint = new Point('price')
             .tag('productId', product._id.toString())
             .floatField('value', price)
-            .timestamp(product.lastScrapedAt);
+            .timestamp(new Date()); // Use current time for the point
         
         writeApi.writePoint(pricePoint);
         await writeApi.flush();
     } else if (price) {
-        logger.info(`Price for ${name} has not changed: ${price}`);
+        logger.info(`Price for ${name} has not changed and was already updated today: ${price}`);
     } else {
         logger.warn(`Could not scrape a valid price for ${name}.`);
     }
@@ -152,13 +158,12 @@ async function getProductDetails(id) {
     return product;
 }
 
-async function getProductPriceHistory(productId) {
+async function getProductPriceHistory(productId, range = '-30d') {
     const fluxQuery = `
         from(bucket: "${bucket}")
-        |> range(start: -30d)
+        |> range(start: ${range})
         |> filter(fn: (r) => r._measurement == "price")
         |> filter(fn: (r) => r.productId == "${productId}")
-        |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
         |> yield(name: "mean")
     `;
 

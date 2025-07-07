@@ -9,8 +9,8 @@ export function getProductById(id: string): Promise<ProductDetails> {
     return api.get(`/api/products/${id}`);
 }
 
-export function getProductHistory(id: string): Promise<PriceHistoryPoint[]> {
-    return api.get(`/api/products/${id}/history`);
+export function getProductHistory(id: string, range?: string): Promise<PriceHistoryPoint[]> {
+    return api.get(`/api/products/${id}/history`, { params: { range } });
 }
 
 export function addProduct(url: string): Promise<Product> {

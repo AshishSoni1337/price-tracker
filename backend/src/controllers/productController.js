@@ -1,7 +1,8 @@
 import { productService } from '../services/productService.js';
 import { logger } from '../config/logger.js';
+import { ValidationError } from '../utils/errors.js';
 
-async function createProduct(req, res, next) {
+async function createProduct(req, res) {
     const { url } = req.body;
     try {
         if (!url) {
@@ -16,7 +17,7 @@ async function createProduct(req, res, next) {
     }
 }
 
-async function getAllProducts(req, res, next) {
+async function getAllProducts(req, res) {
     try {
         const products = await productService.getAllTrackedProducts();
         res.json(products);
@@ -26,7 +27,7 @@ async function getAllProducts(req, res, next) {
     }
 }
 
-async function getProductById(req, res, next) {
+async function getProductById(req, res) {
     try {
         const product = await productService.getProductDetails(req.params.id);
         res.json(product);
@@ -36,9 +37,11 @@ async function getProductById(req, res, next) {
     }
 }
 
-async function getProductHistory(req, res, next) {
+async function getProductHistory(req, res) {
     try {
-        const data = await productService.getProductPriceHistory(req.params.id);
+        const { id } = req.params;
+        const { range } = req.query;
+        const data = await productService.getProductPriceHistory(id, range);
         res.json(data);
     } catch (error) {
         logger.error(`Error in getProductHistory for ${req.params.id}:`, { message: error.message });
@@ -46,7 +49,7 @@ async function getProductHistory(req, res, next) {
     }
 }
 
-async function testScrape(req, res, next) {
+async function testScrape(req, res) {
     const { url } = req.body;
     try {
         if (!url) {
@@ -60,7 +63,7 @@ async function testScrape(req, res, next) {
     }
 }
 
-async function updateProductStatus(req, res, next) {
+async function updateProductStatus(req, res) {
     try {
         const { id } = req.params;
         const { status } = req.body;
