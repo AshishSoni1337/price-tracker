@@ -17,7 +17,9 @@ const amazonSelectors = {
         ],
     },
     discovery: {
-        productListSelector: "div.s-card-container",
+        // Using `div[data-asin]` is more reliable as it directly targets product containers
+        // that have an ASIN (Amazon Standard Identification Number), which we use as a uniqueId.
+        productListSelector: "div[data-asin]",
         nameSelector: [
             "a.a-link-normal h2 span",
         ],

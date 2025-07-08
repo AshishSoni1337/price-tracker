@@ -123,6 +123,9 @@ export async function scrapeProductPage(url, selectors) {
                 timeout: 60000,
             });
 
+            // Inject browser-side utility functions.
+            await page.addScriptTag({ path: 'backend/src/scraper/browser/pageUtils.js' });
+
             // Handle potential "are you a bot" pages before scraping.
             await handleInterstitialPage(
                 page,
@@ -133,26 +136,6 @@ export async function scrapeProductPage(url, selectors) {
             await simulateHumanBehavior(page);
 
             const details = await page.evaluate((sel) => {
-                function querySelectorWithFallbacks(baseElement, selectors) {
-                    if (!Array.isArray(selectors)) selectors = [selectors];
-                    for (const selector of selectors) {
-                        const element = baseElement.querySelector(selector);
-                        if (element) return element;
-                    }
-                    return null;
-                }
-
-                function querySelectorAllWithFallbacks(baseElement, selectors) {
-                    if (!Array.isArray(selectors)) selectors = [selectors];
-                    for (const selector of selectors) {
-                        const elements = Array.from(
-                            baseElement.querySelectorAll(selector)
-                        );
-                        if (elements.length > 0) return elements;
-                    }
-                    return [];
-                }
-
                 function findAmazonAsin() {
                     // Strategy 1: Find in the product details table
                     const thElements = Array.from(
@@ -186,16 +169,16 @@ export async function scrapeProductPage(url, selectors) {
                     return null;
                 }
 
-                const name = querySelectorWithFallbacks(document, sel.nameSelector)
+                const name = window.querySelectorWithFallbacks(document, sel.nameSelector)
                     ?.innerText.trim();
-                const priceString = querySelectorWithFallbacks(document, sel.priceSelector)
+                const priceString = window.querySelectorWithFallbacks(document, sel.priceSelector)
                     ?.innerText.trim();
                 const price = priceString
                     ? parseFloat(priceString.replace(/[^0-9.-]+/g, ""))
                     : null;
-                const description = querySelectorWithFallbacks(document, sel.descriptionSelector)
+                const description = window.querySelectorWithFallbacks(document, sel.descriptionSelector)
                     ?.innerText.trim();
-                const images = querySelectorAllWithFallbacks(document, sel.imageSelector)
+                const images = window.querySelectorAllWithFallbacks(document, sel.imageSelector)
                     .map((img) => img.src);
 
                 let uniqueId = null;
@@ -203,7 +186,7 @@ export async function scrapeProductPage(url, selectors) {
                     uniqueId = findAmazonAsin();
                 } else {
                     // For other platforms, try the standard selector if it exists
-                    uniqueId = querySelectorWithFallbacks(document, sel.uniqueIdSelector)
+                    uniqueId = window.querySelectorWithFallbacks(document, sel.uniqueIdSelector)
                         ?.innerText.trim();
                 }
 
@@ -250,6 +233,9 @@ export async function scrapeDiscoveryPage(page, url) {
         logger.info(`Navigating to discovery URL: ${url}`);
         await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
+        // Inject browser-side utility functions.
+        await page.addScriptTag({ path: 'backend/src/scraper/browser/pageUtils.js' });
+
         const selectors = getDiscoveryPageSelectors(url);
         if (!selectors) {
             throw new Error(
@@ -262,15 +248,6 @@ export async function scrapeDiscoveryPage(page, url) {
         });
 
         const discoveredProducts = await page.evaluate((s) => {
-            function querySelectorWithFallbacks(baseElement, selectors) {
-                if (!Array.isArray(selectors)) selectors = [selectors];
-                for (const selector of selectors) {
-                    const element = baseElement.querySelector(selector);
-                    if (element) return element;
-                }
-                return null;
-            }
-
             const productNodes = document.querySelectorAll(
                 s.productListSelector
             );
@@ -278,17 +255,18 @@ export async function scrapeDiscoveryPage(page, url) {
 
             productNodes.forEach((node) => {
                 const name =
-                    querySelectorWithFallbacks(node, s.nameSelector)
+                    window.querySelectorWithFallbacks(node, s.nameSelector)
                         ?.innerText.trim() || null;
                 const priceString =
-                    querySelectorWithFallbacks(node, s.priceSelector)
+                    window.querySelectorWithFallbacks(node, s.priceSelector)
                         ?.innerText.trim() || null;
                 const url =
-                    querySelectorWithFallbacks(node, s.linkSelector)?.href ||
+                    window.querySelectorWithFallbacks(node, s.linkSelector)?.href ||
                     null;
                 const image =
-                    querySelectorWithFallbacks(node, s.imageSelector)?.src ||
+                    window.querySelectorWithFallbacks(node, s.imageSelector)?.src ||
                     null;
+                const uniqueId = window.getUniqueId(node, url, s.platform);
 
                 if (name && priceString && url) {
                     const priceMatch = priceString
@@ -298,7 +276,7 @@ export async function scrapeDiscoveryPage(page, url) {
                         ? parseFloat(priceMatch[0].replace(/,/g, ""))
                         : null;
 
-                    products.push({ name, price, url, image });
+                    products.push({ name, price, url, image, uniqueId });
                 }
             });
             return products;

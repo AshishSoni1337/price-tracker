@@ -238,14 +238,35 @@ async function discoverProducts(platform, query) {
         return [];
     }
 
-    // Check which of the discovered products are already being tracked
+    // From the discovered items, extract the unique IDs (if they exist) and the URLs.
+    const discoveredIds = discoveredItems.map(item => item.uniqueId).filter(Boolean);
     const discoveredUrls = discoveredItems.map(item => item.url);
-    const trackedProducts = await Product.find({ url: { $in: discoveredUrls } }).select('url');
+
+    // To check for tracked products, we build a query that looks for a match
+    // on either the platform-specific unique ID or the product URL.
+    const orConditions = [];
+    if (discoveredIds.length > 0) {
+        // Match documents where the platform and uniqueId are in the list of discovered IDs.
+        orConditions.push({ platform, uniqueId: { $in: discoveredIds } });
+    }
+    // Always include a check for the URL as a fallback.
+    orConditions.push({ url: { $in: discoveredUrls } });
+
+    // Fetch products from the database that match any of our conditions.
+    // We only select the 'uniqueId' and 'url' fields for efficiency.
+    const trackedProducts = await Product.find({ $or: orConditions }).select('uniqueId url');
+
+    // For efficient O(1) lookup, create sets of the unique IDs and URLs
+    // of the products that are already being tracked.
+    const trackedUniqueIds = new Set(trackedProducts.map(p => p.uniqueId).filter(Boolean));
     const trackedUrls = new Set(trackedProducts.map(p => p.url));
 
+    // Augment the discovered items with an `isTracked` flag.
     const results = discoveredItems.map(item => ({
         ...item,
-        isTracked: trackedUrls.has(item.url),
+        // An item is considered tracked if its unique ID (for this platform) is known,
+        // or if its URL is already in the database.
+        isTracked: (item.uniqueId && trackedUniqueIds.has(item.uniqueId)) || trackedUrls.has(item.url),
     }));
 
     return results;

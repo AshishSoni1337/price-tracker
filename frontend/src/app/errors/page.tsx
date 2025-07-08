@@ -21,7 +21,7 @@ const ErrorDetailsModal = ({ errorDetails, onClose }: { errorDetails: ErrorLogDe
                 <div className="space-y-6">
                     <div>
                         <h3 className="font-semibold text-gray-600 text-sm mb-1">Message</h3>
-                        <p className="text-red-700 bg-red-50 p-3 rounded-lg font-mono text-sm">{errorDetails.message}</p>
+                        <p className="text-red-700 bg-red-50 p-3 rounded-lg font-mono text-sm">{errorDetails.errorMessage}</p>
                     </div>
                     <div>
                         <h3 className="font-semibold text-gray-600 text-sm mb-1">URL</h3>
