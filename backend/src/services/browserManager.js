@@ -85,6 +85,16 @@
         });
         const page = await context.newPage();
 
+        // Block images and other heavy resources to save memory
+        await page.route("**/*", (route) => {
+            const resourceType = route.request().resourceType();
+            if (["image", "media", "font", "stylesheet"].includes(resourceType)) {
+                route.abort();
+            } else {
+                route.continue();
+            }
+        });
+
         try {
             return await fn(page);
         } finally {

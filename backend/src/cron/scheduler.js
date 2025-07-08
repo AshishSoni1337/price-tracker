@@ -10,7 +10,7 @@ import { logger } from "../config/logger.js";
  */
 const addProductToQueue = async (productId) => {
     try {
-        await scrapingQueue.add("scrape-product", { productId });
+        await scrapingQueue.add("scrape-product", { productId }, { jobId: productId });
         logger.info(`Added product ${productId} to the scraping queue.`);
     } catch (error) {
         logger.error(`Failed to add product ${productId} to queue:`, error);
