@@ -123,8 +123,23 @@ export async function scrapeProductPage(url, selectors) {
                 timeout: 60000,
             });
 
-            // Inject browser-side utility functions.
-            await page.addScriptTag({ path: 'backend/src/scraper/browser/pageUtils.js' });
+            const querySelectorWithFallbacks = (baseElement, selectors) => {
+                if (!Array.isArray(selectors)) selectors = [selectors];
+                for (const selector of selectors) {
+                    const element = baseElement.querySelector(selector);
+                    if (element) return element;
+                }
+                return null;
+            };
+
+            const querySelectorAllWithFallbacks = (baseElement, selectors) => {
+                if (!Array.isArray(selectors)) selectors = [selectors];
+                for (const selector of selectors) {
+                    const elements = Array.from(baseElement.querySelectorAll(selector));
+                    if (elements.length > 0) return elements;
+                }
+                return [];
+            };
 
             // Handle potential "are you a bot" pages before scraping.
             await handleInterstitialPage(
@@ -169,16 +184,16 @@ export async function scrapeProductPage(url, selectors) {
                     return null;
                 }
 
-                const name = window.querySelectorWithFallbacks(document, sel.nameSelector)
+                const name = querySelectorWithFallbacks(document, sel.nameSelector)
                     ?.innerText.trim();
-                const priceString = window.querySelectorWithFallbacks(document, sel.priceSelector)
+                const priceString = querySelectorWithFallbacks(document, sel.priceSelector)
                     ?.innerText.trim();
                 const price = priceString
                     ? parseFloat(priceString.replace(/[^0-9.-]+/g, ""))
                     : null;
-                const description = window.querySelectorWithFallbacks(document, sel.descriptionSelector)
+                const description = querySelectorWithFallbacks(document, sel.descriptionSelector)
                     ?.innerText.trim();
-                const images = window.querySelectorAllWithFallbacks(document, sel.imageSelector)
+                const images = querySelectorAllWithFallbacks(document, sel.imageSelector)
                     .map((img) => img.src);
 
                 let uniqueId = null;
@@ -186,7 +201,7 @@ export async function scrapeProductPage(url, selectors) {
                     uniqueId = findAmazonAsin();
                 } else {
                     // For other platforms, try the standard selector if it exists
-                    uniqueId = window.querySelectorWithFallbacks(document, sel.uniqueIdSelector)
+                    uniqueId = querySelectorWithFallbacks(document, sel.uniqueIdSelector)
                         ?.innerText.trim();
                 }
 
@@ -233,8 +248,31 @@ export async function scrapeDiscoveryPage(page, url) {
         logger.info(`Navigating to discovery URL: ${url}`);
         await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-        // Inject browser-side utility functions.
-        await page.addScriptTag({ path: 'backend/src/scraper/browser/pageUtils.js' });
+        const querySelectorWithFallbacks = (baseElement, selectors) => {
+            if (!Array.isArray(selectors)) selectors = [selectors];
+            for (const selector of selectors) {
+                const element = baseElement.querySelector(selector);
+                if (element) return element;
+            }
+            return null;
+        };
+
+        const getUniqueId = (node, url, platform) => {
+            if (platform === "amazon") {
+                // For Amazon, the ASIN is in the `data-asin` attribute.
+                return node.dataset.asin || null;
+            }
+            if (platform === "flipkart" && url) {
+                // For Flipkart, the Product ID (pid) is in the URL query parameters.
+                try {
+                    const urlObject = new URL(url);
+                    return urlObject.searchParams.get("pid");
+                } catch {
+                    return null; // Ignore URL parsing errors.
+                }
+            }
+            return null;
+        };
 
         const selectors = getDiscoveryPageSelectors(url);
         if (!selectors) {
@@ -255,18 +293,18 @@ export async function scrapeDiscoveryPage(page, url) {
 
             productNodes.forEach((node) => {
                 const name =
-                    window.querySelectorWithFallbacks(node, s.nameSelector)
+                    querySelectorWithFallbacks(node, s.nameSelector)
                         ?.innerText.trim() || null;
                 const priceString =
-                    window.querySelectorWithFallbacks(node, s.priceSelector)
+                    querySelectorWithFallbacks(node, s.priceSelector)
                         ?.innerText.trim() || null;
                 const url =
-                    window.querySelectorWithFallbacks(node, s.linkSelector)?.href ||
+                    querySelectorWithFallbacks(node, s.linkSelector)?.href ||
                     null;
                 const image =
-                    window.querySelectorWithFallbacks(node, s.imageSelector)?.src ||
+                    querySelectorWithFallbacks(node, s.imageSelector)?.src ||
                     null;
-                const uniqueId = window.getUniqueId(node, url, s.platform);
+                const uniqueId = getUniqueId(node, url, s.platform);
 
                 if (name && priceString && url) {
                     const priceMatch = priceString
