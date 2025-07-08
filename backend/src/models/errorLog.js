@@ -5,6 +5,11 @@ const errorLogSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    errorType: {
+        type: String,
+        enum: ['unknown', 'Error page'],
+        default: 'unknown',
+    },
     stackTrace: {
         type: String,
     },

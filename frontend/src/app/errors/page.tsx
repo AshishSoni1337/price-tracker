@@ -81,12 +81,13 @@ export default function ErrorsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [limit, setLimit] = useState(10);
+    const [errorTypeFilter, setErrorTypeFilter] = useState<string>('all');
 
     useEffect(() => {
         const fetchErrors = async () => {
             setIsLoading(true);
             try {
-                const params: GetErrorsParams = { page: currentPage, limit };
+                const params: GetErrorsParams = { page: currentPage, limit, errorType: errorTypeFilter };
                 const data = await getErrorLogs(params);
                 setErrorLogs(data.errors);
                 setTotalPages(data.totalPages);
@@ -97,7 +98,7 @@ export default function ErrorsPage() {
             }
         };
         fetchErrors();
-    }, [currentPage, limit]);
+    }, [currentPage, limit, errorTypeFilter]);
 
     const handleViewDetails = async (id: string) => {
         try {
@@ -113,16 +114,31 @@ export default function ErrorsPage() {
             <div className="container mx-auto p-4 md:p-6">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">Application Error Logs</h1>
-                    <div className="flex items-center">
-                        <label htmlFor="limit-select" className="mr-2 text-sm font-medium text-gray-600">Show:</label>
-                        <select
-                            id="limit-select"
-                            value={limit}
-                            onChange={(e) => { setLimit(Number(e.target.value)); setCurrentPage(1); }}
-                            className="bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-8 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                            {[5, 10, 20, 50].map(val => <option key={val} value={val}>{val}</option>)}
-                        </select>
+                    <div className="flex items-center space-x-4">
+                        <div>
+                            <label htmlFor="type-select" className="mr-2 text-sm font-medium text-gray-600">Type:</label>
+                            <select
+                                id="type-select"
+                                value={errorTypeFilter}
+                                onChange={(e) => { setErrorTypeFilter(e.target.value); setCurrentPage(1); }}
+                                className="bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-8 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <option value="all">All</option>
+                                <option value="unknown">Unknown</option>
+                                <option value="Error page">Error page</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label htmlFor="limit-select" className="mr-2 text-sm font-medium text-gray-600">Show:</label>
+                            <select
+                                id="limit-select"
+                                value={limit}
+                                onChange={(e) => { setLimit(Number(e.target.value)); setCurrentPage(1); }}
+                                className="bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-8 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                                {[5, 10, 20, 50].map(val => <option key={val} value={val}>{val}</option>)}
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -151,6 +167,7 @@ export default function ErrorsPage() {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th scope="col" className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error Message</th>
+                                        <th scope="col" className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                         <th scope="col" className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Affected URL</th>
                                         <th scope="col" className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
                                         <th scope="col" className="px-6 py-3"><span className="sr-only">Actions</span></th>
@@ -160,7 +177,12 @@ export default function ErrorsPage() {
                                     {errorLogs.map((log) => (
                                         <tr key={log._id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 max-w-sm break-words">
-                                                <p className="text-sm font-medium text-red-600" title={log.message}>{log.message}</p>
+                                                <p className="text-sm font-medium text-red-600" title={log.errorMessage}>{log.errorMessage}</p>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${log.errorType === 'unknown' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                    {log.errorType}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 max-w-sm break-words">
                                                 <a href={log.url} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 hover:text-indigo-600" title={log.url}>
@@ -168,7 +190,7 @@ export default function ErrorsPage() {
                                                 </a>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {new Date(log.createdAt).toLocaleString()}
+                                                {new Date(log.timestamp).toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <button onClick={() => handleViewDetails(log._id)} className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

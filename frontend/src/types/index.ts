@@ -45,15 +45,11 @@ export interface PriceHistoryPoint {
 
 export interface ErrorLog {
     _id: string;
-    message: string;
-    stack: string;
-    componentStack?: string;
-    url?: string;
-    method?: string;
-    statusCode?: number;
-    errorType: 'frontend' | 'backend';
-    createdAt: string;
-    updatedAt: string;
+    errorMessage: string;
+    stack?: string;
+    url: string;
+    errorType: 'unknown' | 'Error page';
+    timestamp: string;
 }
 
 export interface PaginatedErrorResponse {
@@ -73,4 +69,5 @@ export interface GetErrorsParams {
     limit?: number;
     sortBy?: string;
     order?: "asc" | "desc";
+    errorType?: string;
 }
