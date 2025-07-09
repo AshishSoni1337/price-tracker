@@ -26,7 +26,10 @@ const productSchema = new Schema({
     },
     retryCount: { type: Number, default: 0 },
     tracking_frequency: { type: String, default: '0 * * * *' }, // Default to every hour
-    variations: [{ type: Schema.Types.ObjectId, ref: 'ProductVariation' }]
+    variations: [{ type: Schema.Types.ObjectId, ref: 'ProductVariation' }],
+    
+    // Alerting field
+    alertEnabled: { type: Boolean, default: false },
 }, { timestamps: true });
 
 productSchema.index({ platform: 1, uniqueId: 1 }, { unique: true, sparse: true });

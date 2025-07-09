@@ -1,33 +1,33 @@
-export type Product = {
+export interface Variation {
     _id: string;
-    name: string;
-    url: string;
-    description: string;
-    images: string[];
-    currentPrice: number;
-    platform: string;
-    status: "ACTIVE" | "PAUSED" | "ERROR";
-    createdAt: string;
-};
-
-export type Variation = {
-    _id: string;
+    product: string;
     size?: string;
     color?: string;
     price: number;
     attributes?: Record<string, string>;
-};
+    createdAt: string;
+    updatedAt: string;
+}
 
-export type ProductDetails = {
+export interface Product {
     _id: string;
     name: string;
-    description: string;
     url: string;
-    images: string[];
+    platform: string;
     currentPrice: number;
-    status: "ACTIVE" | "PAUSED" | "ERROR";
+    lastScrapedAt: string;
+    status: 'ACTIVE' | 'PAUSED' | 'ERROR';
+    tracking_frequency: string;
+    createdAt: string;
+    updatedAt: string;
+    alertEnabled: boolean;
+}
+
+export interface ProductDetails extends Product {
+    description: string;
+    images: string[];
     variations: Variation[];
-};
+}
 
 export type DiscoveredProduct = {
     name: string;

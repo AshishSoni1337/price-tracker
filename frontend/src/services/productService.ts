@@ -9,8 +9,12 @@ export function getProductById(id: string): Promise<ProductDetails> {
     return api.get(`/api/products/${id}`);
 }
 
-export function getProductHistory(id: string, range?: string): Promise<PriceHistoryPoint[]> {
-    return api.get(`/api/products/${id}/history`, { params: { range } });
+export function getProductHistory(id: string, range: string = '-30d'): Promise<PriceHistoryPoint[]> {
+    return api.get(`/api/products/${id}/history`, { params: { range } })
+}
+
+export function toggleProductAlert(id: string, isEnabled: boolean): Promise<ProductDetails> {
+    return api.patch(`/api/products/${id}/alert`, { isEnabled })
 }
 
 export function addProduct(url: string): Promise<Product> {

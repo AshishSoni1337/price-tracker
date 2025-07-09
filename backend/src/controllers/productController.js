@@ -86,6 +86,29 @@ async function discoverProducts(req, res) {
     }
 }
 
+async function toggleProductAlert(req, res) {
+    const { id } = req.params;
+    const { isEnabled } = req.body;
+    try {
+        const product = await productService.toggleProductAlert(id, isEnabled);
+        res.status(200).json(product);
+    } catch (error) {
+        logger.error(`Error in toggleProductAlert for ${id}:`, { message: error.message });
+        res.status(error.statusCode || 500).json({ message: error.message });
+    }
+}
+
+async function testProductAlert(req, res) {
+    const { id } = req.params;
+    try {
+        const result = await productService.testProductAlert(id);
+        res.status(200).json(result);
+    } catch (error) {
+        logger.error(`Error in testProductAlert for ${id}:`, { message: error.message });
+        res.status(error.statusCode || 500).json({ message: error.message });
+    }
+}
+
 export const productController = {
     createProduct,
     getAllProducts,
@@ -94,4 +117,6 @@ export const productController = {
     testScrape,
     updateProductStatus,
     discoverProducts,
+    toggleProductAlert,
+    testProductAlert,
 }; 

@@ -6,6 +6,8 @@ import { Point } from '@influxdata/influxdb-client';
 import { ValidationError, DuplicateError, ScrapingError, NotFoundError } from '../utils/errors.js';
 import { logger } from '../config/logger.js';
 import { withPage } from '../services/browserManager.js';
+import { alertConfig } from '../config/alertConfig.js';
+import { dispatchPriceDropAlert } from './alertService.js';
 
 // --- Helper Functions for trackNewProduct ---
 
@@ -117,6 +119,7 @@ async function updateProduct(productId) {
     product.status = 'ACTIVE';
     product.retryCount = 0;
 
+    const oldPrice = product.currentPrice;
     const isUpdatedToday = product.lastScrapedAt?.toDateString() === new Date().toDateString();
 
     // ANSI color codes
@@ -131,6 +134,16 @@ async function updateProduct(productId) {
     if (price && (price !== product.currentPrice || !isUpdatedToday)) {
         if (price !== product.currentPrice) {
             logger.info(`Price changed for ${product.name}: ${colors.yellow}${product.currentPrice}${colors.reset} -> ${colors.green}${price}${colors.reset}`);
+            
+            // Check for price drop alert
+            if (product.alertEnabled && oldPrice && price < oldPrice * (1 - alertConfig.priceDropThreshold)) {
+                logger.info(`Price drop detected for ${product.name}. Triggering alert.`);
+                // We don't want to wait for the alert to be sent
+                dispatchPriceDropAlert(product, oldPrice, price).catch(err => {
+                    logger.error(`Error dispatching price drop alert for ${product._id}`, err);
+                });
+            }
+
         } else {
             logger.info(`Price for ${product.name} is the same, recording daily price point: ${colors.cyan}${price}${colors.reset}`);
         }
@@ -198,15 +211,56 @@ async function updateProductStatus(id, status) {
     if (!status || !allowedStatuses.includes(status)) {
         throw new ValidationError('Invalid status provided.');
     }
-
-    const product = await Product.findById(id);
+    const product = await Product.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true }
+    );
     if (!product) {
-        throw new NotFoundError('Product not found');
+        throw new NotFoundError('Product not found for status update.');
+    }
+    logger.info(`Product ${id} status updated to ${status}.`);
+    return product;
+}
+
+async function toggleProductAlert(id, isEnabled) {
+    if (typeof isEnabled !== 'boolean') {
+        throw new ValidationError('Invalid value for isEnabled. It must be a boolean.');
     }
 
-    product.status = status;
-    await product.save();
+    const product = await Product.findByIdAndUpdate(
+        id,
+        { alertEnabled: isEnabled },
+        { new: true }
+    );
+
+    if (!product) {
+        throw new NotFoundError('Product not found for alert toggle.');
+    }
+
+    logger.info(`Product ${id} alert has been ${isEnabled ? 'enabled' : 'disabled'}.`);
     return product;
+}
+
+async function testProductAlert(productId) {
+    const product = await Product.findById(productId);
+    if (!product) {
+        throw new NotFoundError(`Product with ID ${productId} not found.`);
+    }
+    if (!product.currentPrice) {
+        throw new ValidationError('Product does not have a current price, cannot simulate a drop.');
+    }
+
+    // Simulate a 20% price drop to ensure it crosses the threshold
+    const oldPrice = product.currentPrice;
+    const newPrice = oldPrice * 0.8;
+
+    logger.info(`Simulating a price drop for "${product.name}" from ${oldPrice} to ${newPrice} to test alerts.`);
+
+    // Dispatch the alert directly
+    await dispatchPriceDropAlert(product, oldPrice, newPrice);
+
+    return { message: `Test alert dispatched for ${product.name}. Check your configured channels.` };
 }
 
 // --- Discovery Service Functions ---
@@ -281,4 +335,6 @@ export const productService = {
     updateProduct,
     updateProductStatus,
     discoverProducts,
+    toggleProductAlert,
+    testProductAlert,
 }; 

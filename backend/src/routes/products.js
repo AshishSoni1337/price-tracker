@@ -37,4 +37,14 @@ router.post('/discover', productController.discoverProducts);
 // @access  Public
 router.patch('/:id/status', productController.updateProductStatus);
 
+// @route   PATCH api/products/:id/alert
+// @desc    Toggle price drop alerts for a product
+// @access  Public
+router.patch('/:id/alert', productController.toggleProductAlert);
+
+// @route   POST api/products/:id/test-alert
+// @desc    Trigger a test alert for a product
+// @access  Public (for development)
+router.post('/:id/test-alert', productController.testProductAlert);
+
 export default router;

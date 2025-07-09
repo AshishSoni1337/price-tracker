@@ -5,9 +5,11 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import PriceChart from '../../components/PriceChart';
-import { getProductById, getProductHistory } from '@/services/productService';
+import { getProductById, getProductHistory, toggleProductAlert } from '@/services/productService';
 import type { Product, ProductDetails, PriceHistoryPoint } from '@/types';
-import { ChevronLeft, ExternalLink, TrendingUp, Tag, Info, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ExternalLink, TrendingUp, Tag, Info, ShoppingCart, Bell } from 'lucide-react';
+import { Switch } from '../../components/common/Switch';
+import { useToast } from '@/app/hooks/useToast';
 
 const StatusBadge = ({ status }: { status: Product['status'] }) => {
     const statusClasses = {
@@ -33,6 +35,9 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [range, setRange] = useState('-30d');
+  const [isAlertEnabled, setIsAlertEnabled] = useState(false);
+  const [isTogglingAlert, setIsTogglingAlert] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (typeof id !== 'string') return;
@@ -41,6 +46,7 @@ export default function ProductDetailPage() {
       try {
         const productData = await getProductById(id);
         setProduct(productData);
+        setIsAlertEnabled(productData.alertEnabled);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       }
@@ -66,6 +72,30 @@ export default function ProductDetailPage() {
     
     fetchHistoryData();
   }, [id, range]);
+
+  const handleAlertToggle = async (isEnabled: boolean) => {
+    if (typeof id !== 'string' || !product) return;
+
+    setIsTogglingAlert(true);
+    try {
+        const updatedProduct = await toggleProductAlert(id, isEnabled);
+        setProduct(updatedProduct);
+        setIsAlertEnabled(updatedProduct.alertEnabled);
+        toast(
+            `Alerts have been ${updatedProduct.alertEnabled ? 'enabled' : 'disabled'}.`,
+            { type: 'success' }
+        );
+    } catch {
+        toast(
+            'Failed to update alert status. Please try again.',
+            { type: 'error' }
+        );
+        // Revert the switch state on error
+        setIsAlertEnabled(!isEnabled);
+    } finally {
+        setIsTogglingAlert(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -160,6 +190,22 @@ export default function ProductDetailPage() {
                         <p className="text-3xl md:text-4xl font-extrabold text-gray-900">
                             {product.variations[0]?.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || 'N/A'}
                         </p>
+                        <div className="mt-6 border-t pt-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <Bell size={18} className="text-gray-600 mr-3" />
+                                    <span className="font-medium text-gray-800">Price Drop Alerts</span>
+                                </div>
+                                <Switch
+                                    checked={isAlertEnabled}
+                                    onChange={handleAlertToggle}
+                                    disabled={isTogglingAlert}
+                                />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Get notified when the price drops significantly.
+                            </p>
+                        </div>
                     </div>
 
                     <div className="bg-white rounded-lg shadow-md p-6">
