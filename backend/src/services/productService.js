@@ -93,7 +93,6 @@ async function trackNewProduct(url) {
         currentPrice: price,
         description,
         images,
-        coverImage: images && images.length > 0 ? images[0] : null,
         lastScrapedAt: new Date()
     };
 
@@ -117,7 +116,6 @@ async function updateProduct(productId) {
     product.name = name || product.name;
     product.description = description || product.description;
     product.images = images || product.images;
-    product.coverImage = (images && images.length > 0) ? images[0] : product.coverImage;
     product.status = 'ACTIVE';
     product.retryCount = 0;
 

@@ -85,7 +85,7 @@ const ProductCard = ({ product, onStatusChange }: { product: Product, onStatusCh
         <div className="flex flex-col h-full">
             <div className="relative h-40 sm:h-48">
                 <Image
-                    src={product.coverImage || '/placeholder.png'}
+                    src={product.images[0] || '/placeholder.png'}
                     alt={product.name}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
