@@ -78,6 +78,8 @@ async function startServer() {
             );
         }
 
+        logger.info(`Current environment: ${process.env.NODE_ENV}`);
+
         app.listen(PORT, () => {
             logger.info(`Backend server listening on port ${PORT}`);
         });
