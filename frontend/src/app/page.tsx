@@ -85,10 +85,10 @@ const ProductCard = ({ product, onStatusChange }: { product: Product, onStatusCh
         <div className="flex flex-col h-full">
             <div className="relative h-40 sm:h-48">
                 <Image
-                    src={product.images[0] || '/placeholder.png'}
+                    src={product.coverImage || '/placeholder.png'}
                     alt={product.name}
                     fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                     style={{ objectFit: 'contain' }}
                     className="p-4"
                 />

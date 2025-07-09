@@ -14,6 +14,7 @@ export interface Product {
     name: string;
     url: string;
     platform: string;
+    coverImage: string;
     currentPrice: number;
     lastScrapedAt: string;
     status: 'ACTIVE' | 'PAUSED' | 'ERROR';

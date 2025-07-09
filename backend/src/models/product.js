@@ -15,6 +15,7 @@ const productSchema = new Schema({
     description: { type: String },
     url: { type: String, required: true, unique: true },
     images: [{ type: String }],
+    coverImage: { type: String },
     platform: { type: String, required: true }, // e.g., 'amazon', 'flipkart'
     uniqueId: { type: String }, // e.g., ASIN for Amazon
     currentPrice: { type: Number },
