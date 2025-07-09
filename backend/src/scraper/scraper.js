@@ -123,24 +123,6 @@ export async function scrapeProductPage(url, selectors) {
                 timeout: 60000,
             });
 
-            const querySelectorWithFallbacks = (baseElement, selectors) => {
-                if (!Array.isArray(selectors)) selectors = [selectors];
-                for (const selector of selectors) {
-                    const element = baseElement.querySelector(selector);
-                    if (element) return element;
-                }
-                return null;
-            };
-
-            const querySelectorAllWithFallbacks = (baseElement, selectors) => {
-                if (!Array.isArray(selectors)) selectors = [selectors];
-                for (const selector of selectors) {
-                    const elements = Array.from(baseElement.querySelectorAll(selector));
-                    if (elements.length > 0) return elements;
-                }
-                return [];
-            };
-
             // Handle potential "are you a bot" pages before scraping.
             await handleInterstitialPage(
                 page,
@@ -151,6 +133,22 @@ export async function scrapeProductPage(url, selectors) {
             await simulateHumanBehavior(page);
 
             const details = await page.evaluate((sel) => {
+                const querySelectorWithFallbacks = (baseElement, selectors) => {
+                    if (!Array.isArray(selectors)) selectors = [selectors];
+                    for (const selector of selectors) {
+                        const element = baseElement.querySelector(selector);
+                        if (element) return element;
+                    }
+                    return null;
+                };
+                const querySelectorAllWithFallbacks = (baseElement, selectors) => {
+                    if (!Array.isArray(selectors)) selectors = [selectors];
+                    for (const selector of selectors) {
+                        const elements = Array.from(baseElement.querySelectorAll(selector));
+                        if (elements.length > 0) return elements;
+                    }
+                    return [];
+                };
                 function findAmazonAsin() {
                     // Strategy 1: Find in the product details table
                     const thElements = Array.from(
@@ -248,32 +246,6 @@ export async function scrapeDiscoveryPage(page, url) {
         logger.info(`Navigating to discovery URL: ${url}`);
         await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-        const querySelectorWithFallbacks = (baseElement, selectors) => {
-            if (!Array.isArray(selectors)) selectors = [selectors];
-            for (const selector of selectors) {
-                const element = baseElement.querySelector(selector);
-                if (element) return element;
-            }
-            return null;
-        };
-
-        const getUniqueId = (node, url, platform) => {
-            if (platform === "amazon") {
-                // For Amazon, the ASIN is in the `data-asin` attribute.
-                return node.dataset.asin || null;
-            }
-            if (platform === "flipkart" && url) {
-                // For Flipkart, the Product ID (pid) is in the URL query parameters.
-                try {
-                    const urlObject = new URL(url);
-                    return urlObject.searchParams.get("pid");
-                } catch {
-                    return null; // Ignore URL parsing errors.
-                }
-            }
-            return null;
-        };
-
         const selectors = getDiscoveryPageSelectors(url);
         if (!selectors) {
             throw new Error(
@@ -286,6 +258,32 @@ export async function scrapeDiscoveryPage(page, url) {
         });
 
         const discoveredProducts = await page.evaluate((s) => {
+            const querySelectorWithFallbacks = (baseElement, selectors) => {
+                if (!Array.isArray(selectors)) selectors = [selectors];
+                for (const selector of selectors) {
+                    const element = baseElement.querySelector(selector);
+                    if (element) return element;
+                }
+                return null;
+            };
+            const getUniqueId = (node, url, platform) => {
+                if (platform === "amazon") {
+                    // For Amazon, the ASIN is in the `data-asin` attribute.
+                    return node.dataset.asin || null;
+                }
+                if (platform === "flipkart" && url) {
+                    // For Flipkart, the Product ID (pid) is in the URL query parameters.
+                    try {
+                        const urlObject = new URL(url);
+                        return urlObject.searchParams.get("pid");
+                    } catch {
+                        return null; // Ignore URL parsing errors.
+                    }
+                }
+                return null;
+            };
+
+
             const productNodes = document.querySelectorAll(
                 s.productListSelector
             );
