@@ -1,4 +1,4 @@
-import { productService } from "../services/productService.js";
+import * as productService from "../services/productService.js";
 import { logger } from "../config/logger.js";
 import { Product } from "../models/product.js";
 

@@ -1,9 +1,15 @@
-import { errorLogService } from '../services/errorLogService.js';
-import { logger } from '../config/logger.js';
+import * as errorLogService from "../services/errorLogService.js";
+import { logger } from "../config/logger.js";
 
-async function getErrors(req, res) {
+export async function getErrors(req, res) {
     try {
-        const { page = 1, limit = 10, sortBy = 'timestamp', order = 'desc', errorType } = req.query;
+        const {
+            page = 1,
+            limit = 10,
+            sortBy = "timestamp",
+            order = "desc",
+            errorType,
+        } = req.query;
         const options = {
             page: parseInt(page, 10),
             limit: parseInt(limit, 10),
@@ -14,12 +20,14 @@ async function getErrors(req, res) {
         const result = await errorLogService.getPaginatedErrors(options);
         res.json(result);
     } catch (error) {
-        logger.error('Error in getErrors controller:', error);
-        res.status(500).json({ message: 'Server error retrieving error logs.' });
+        logger.error("Error in getErrors controller:", error);
+        res.status(500).json({
+            message: "Server error retrieving error logs.",
+        });
     }
 }
 
-async function getErrorDetails(req, res) {
+export async function getErrorDetails(req, res) {
     try {
         const errorLog = await errorLogService.getErrorById(req.params.id);
         res.json(errorLog);
@@ -29,23 +37,21 @@ async function getErrorDetails(req, res) {
     }
 }
 
-async function getErrorScreenshot(req, res) {
+export async function getErrorScreenshot(req, res) {
     try {
         const errorLog = await errorLogService.getErrorById(req.params.id);
         if (!errorLog.screenshot) {
-            return res.status(404).json({ message: 'No screenshot available for this error.' });
+            return res
+                .status(404)
+                .json({ message: "No screenshot available for this error." });
         }
-        res.set('Content-Type', 'image/png');
+        res.set("Content-Type", "image/png");
         res.send(errorLog.screenshot);
     } catch (error) {
-        logger.error(`Error in getErrorScreenshot for ${req.params.id}:`, error);
+        logger.error(
+            `Error in getErrorScreenshot for ${req.params.id}:`,
+            error
+        );
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
-
-
-export const errorLogController = {
-    getErrors,
-    getErrorDetails,
-    getErrorScreenshot,
-}; 

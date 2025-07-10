@@ -59,7 +59,7 @@ async function _saveProductAndPrice(productData) {
 
 // --- Main Service Functions ---
 
-async function testScrapeProduct(url) {
+export async function testScrapeProduct(url) {
     if (!url) {
         throw new ValidationError('URL is required for testing scrape.');
     }
@@ -70,7 +70,7 @@ async function testScrapeProduct(url) {
     return await _scrapeAndValidateData(url, selectors);
 }
 
-async function trackNewProduct(url) {
+export async function trackNewProduct(url) {
     if (!url) {
         throw new ValidationError('URL is required');
     }
@@ -100,7 +100,7 @@ async function trackNewProduct(url) {
     return await _saveProductAndPrice(productData);
 }
 
-async function updateProduct(productId) {
+export async function updateProduct(productId) {
     const product = await Product.findById(productId);
     if (!product) {
         throw new NotFoundError(`Product with ID ${productId} not found.`);
@@ -172,7 +172,7 @@ async function updateProduct(productId) {
     return product;
 }
 
-async function getAllTrackedProducts(options = {}) {
+export async function getAllTrackedProducts(options = {}) {
     const { page = 1, limit = 10, search, platform } = options;
     const query = {};
 
@@ -204,7 +204,7 @@ async function getAllTrackedProducts(options = {}) {
     };
 }
 
-async function getProductDetails(id) {
+export async function getProductDetails(id) {
     const product = await Product.findById(id).populate('variations');
     if (!product) {
         throw new NotFoundError('Product not found');
@@ -212,7 +212,7 @@ async function getProductDetails(id) {
     return product;
 }
 
-async function getProductPriceHistory(productId, range = '-30d') {
+export async function getProductPriceHistory(productId, range = '-30d') {
     const fluxQuery = `
         from(bucket: "${bucket}")
         |> range(start: ${range})
@@ -239,7 +239,7 @@ async function getProductPriceHistory(productId, range = '-30d') {
     });
 }
 
-async function updateProductStatus(id, status) {
+export async function updateProductStatus(id, status) {
     const allowedStatuses = ['ACTIVE', 'PAUSED'];
     if (!status || !allowedStatuses.includes(status)) {
         throw new ValidationError('Invalid status provided.');
@@ -256,7 +256,7 @@ async function updateProductStatus(id, status) {
     return product;
 }
 
-async function toggleProductAlert(id, isEnabled) {
+export async function toggleProductAlert(id, isEnabled) {
     if (typeof isEnabled !== 'boolean') {
         throw new ValidationError('Invalid value for isEnabled. It must be a boolean.');
     }
@@ -275,7 +275,7 @@ async function toggleProductAlert(id, isEnabled) {
     return product;
 }
 
-async function testProductAlert(productId) {
+export async function testProductAlert(productId) {
     const product = await Product.findById(productId);
     if (!product) {
         throw new NotFoundError(`Product with ID ${productId} not found.`);
@@ -309,7 +309,8 @@ const buildSearchUrl = (platform, query) => {
     }
 };
 
-async function discoverProducts(platform, query) {
+export async function discoverProducts(platform, query) {
+    console.log(platform)
     if (!platform || !query) {
         throw new ValidationError('Platform and search query are required.');
     }
@@ -358,16 +359,3 @@ async function discoverProducts(platform, query) {
 
     return results;
 }
-
-export const productService = {
-    trackNewProduct,
-    getAllTrackedProducts,
-    getProductDetails,
-    getProductPriceHistory,
-    testScrapeProduct,
-    updateProduct,
-    updateProductStatus,
-    discoverProducts,
-    toggleProductAlert,
-    testProductAlert,
-}; 

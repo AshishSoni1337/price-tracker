@@ -1,13 +1,13 @@
-import { productService } from '../services/productService.js';
-import { logger } from '../config/logger.js';
-import { ValidationError } from '../utils/errors.js';
+import * as productService from "../services/productService.js";
+import { logger } from "../config/logger.js";
+import { ValidationError } from "../utils/errors.js";
 
-async function createProduct(req, res) {
+export async function createProduct(req, res) {
     const { url } = req.body;
     try {
         if (!url) {
             // This case should be caught by the service, but as a safeguard:
-            throw new ValidationError('URL is required.');
+            throw new ValidationError("URL is required.");
         }
         const newProduct = await productService.trackNewProduct(url);
         res.status(201).json(newProduct);
@@ -17,7 +17,7 @@ async function createProduct(req, res) {
     }
 }
 
-async function getAllProducts(req, res) {
+export async function getAllProducts(req, res) {
     try {
         const { page = 1, limit = 10, search, platform } = req.query;
         const products = await productService.getAllTrackedProducts({
@@ -28,12 +28,12 @@ async function getAllProducts(req, res) {
         });
         res.json(products);
     } catch (error) {
-        logger.error('Error in getAllProducts:', error.message);
-        res.status(500).json({ message: 'Server error retrieving products.' });
+        logger.error("Error in getAllProducts:", error.message);
+        res.status(500).json({ message: "Server error retrieving products." });
     }
 }
 
-async function getProductById(req, res) {
+export async function getProductById(req, res) {
     try {
         const product = await productService.getProductDetails(req.params.id);
         res.json(product);
@@ -43,7 +43,7 @@ async function getProductById(req, res) {
     }
 }
 
-async function getProductHistory(req, res) {
+export async function getProductHistory(req, res) {
     try {
         const { id } = req.params;
         const { range } = req.query;
@@ -55,11 +55,11 @@ async function getProductHistory(req, res) {
     }
 }
 
-async function testScrape(req, res) {
+export async function testScrape(req, res) {
     const { url } = req.body;
     try {
         if (!url) {
-            throw new ValidationError('URL is required for test scrape.');
+            throw new ValidationError("URL is required for test scrape.");
         }
         const scrapedData = await productService.testScrapeProduct(url);
         res.json(scrapedData);
@@ -69,11 +69,14 @@ async function testScrape(req, res) {
     }
 }
 
-async function updateProductStatus(req, res) {
+export async function updateProductStatus(req, res) {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const updatedProduct = await productService.updateProductStatus(id, status);
+        const updatedProduct = await productService.updateProductStatus(
+            id,
+            status
+        );
         res.json(updatedProduct);
     } catch (error) {
         logger.error(`Error in updateProductStatus for ${req.params.id}:`, { message: error.message });
@@ -81,7 +84,7 @@ async function updateProductStatus(req, res) {
     }
 }
 
-async function discoverProducts(req, res) {
+export async function discoverProducts(req, res) {
     const { platform, query } = req.body;
     try {
         const results = await productService.discoverProducts(platform, query);
@@ -92,7 +95,7 @@ async function discoverProducts(req, res) {
     }
 }
 
-async function toggleProductAlert(req, res) {
+export async function toggleProductAlert(req, res) {
     const { id } = req.params;
     const { isEnabled } = req.body;
     try {
@@ -104,7 +107,7 @@ async function toggleProductAlert(req, res) {
     }
 }
 
-async function testProductAlert(req, res) {
+export async function testProductAlert(req, res) {
     const { id } = req.params;
     try {
         const result = await productService.testProductAlert(id);
@@ -114,15 +117,3 @@ async function testProductAlert(req, res) {
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 }
-
-export const productController = {
-    createProduct,
-    getAllProducts,
-    getProductById,
-    getProductHistory,
-    testScrape,
-    updateProductStatus,
-    discoverProducts,
-    toggleProductAlert,
-    testProductAlert,
-}; 

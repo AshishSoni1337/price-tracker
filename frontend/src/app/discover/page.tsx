@@ -156,8 +156,8 @@ export default function DiscoverPage() {
                                 className="py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white"
                                 disabled={isLoading}
                             >
-                                <option value="amazon.in">Amazon</option>
-                                <option value="flipkart.com">Flipkart</option>
+                                <option value="amazon">Amazon</option>
+                                <option value="flipkart">Flipkart</option>
                             </select>
                             <input
                                 type="text"

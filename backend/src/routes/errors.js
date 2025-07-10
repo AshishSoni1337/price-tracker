@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { errorLogController } from '../controllers/errorLogController.js';
+import * as errorLogController from '../controllers/errorLogController.js';
 
 // @route   GET api/errors
 // @desc    Get paginated error logs

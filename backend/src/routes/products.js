@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { productController } from '../controllers/productController.js';
+import * as productController from '../controllers/productController.js';
 
 // @route   POST api/products
 // @desc    Add a new product to track

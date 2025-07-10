@@ -15,9 +15,7 @@ async function getKnownErrorType(page) {
         }
         if (
             pageText.includes("We're sorry") &&
-            pageText.includes(
-                "An error occurred when we tried to process your request"
-            )
+            pageText.includes("An error occurred when we tried to process your request")
         ) {
             return "Processing Error";
         }
@@ -43,9 +41,7 @@ async function logScrapingError(page, url, error, isDataMissing = false) {
     };
 
     if (knownErrorType) {
-        logger.warn(
-            `Known error page detected at ${url}: ${knownErrorType}. Skipping screenshot.`
-        );
+        logger.warn(`Known error page detected at ${url}: ${knownErrorType}. Skipping screenshot.`);
         errorLog.errorType = knownErrorType;
     } else {
         logger.error(
@@ -97,9 +93,7 @@ async function handleInterstitialPage(page, selectors) {
                 timeout: 3000,
             });
             if (button) {
-                logger.info(
-                    `Interstitial button found with selector: "${selector}". Clicking...`
-                );
+                logger.info(`Interstitial button found with selector: "${selector}". Clicking...`);
 
                 // Add a human-like delay
                 const delay = Math.random() * 2000 + 1000; // 1-3 seconds
@@ -134,7 +128,7 @@ export async function scrapeProductPage(url, selectors) {
         try {
             await page.goto(url, {
                 waitUntil: "domcontentloaded",
-                timeout: 60000,
+                timeout: 16000,
             });
 
             // Handle potential "are you a bot" pages before scraping.
@@ -265,14 +259,13 @@ export async function scrapeDiscoveryPage(page, url) {
 
     try {
         logger.info(`Navigating to discovery URL: ${url}`);
-        await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+        await page.goto(url, { waitUntil: "domcontentloaded", timeout: 16000 });
 
         const selectors = getDiscoveryPageSelectors(url);
         if (!selectors) {
             throw new Error(
                 `Could not find discovery page selectors for URL: ${url}`);
         }
-
         // Wait for the list of products to be present on the page.
         await page.waitForSelector(selectors.productListSelector, {
             timeout: 15000,
@@ -351,6 +344,6 @@ export async function scrapeDiscoveryPage(page, url) {
     } catch (error) {
         const errorMessage = `Error scraping discovery page ${url}: ${error.message}`;
         logger.error(errorMessage);
-        throw new ScrapingError(errorMessage, { cause: error });
+        throw new ScrapingError(errorMessage);
     }
 }

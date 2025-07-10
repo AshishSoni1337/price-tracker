@@ -1,5 +1,5 @@
-import ErrorLog from '../models/errorLog.js';
-import { NotFoundError } from '../utils/errors.js';
+import ErrorLog from "../models/errorLog.js";
+import { NotFoundError } from "../utils/errors.js";
 
 /**
  * Fetches a paginated list of error logs from the database.
@@ -10,9 +10,15 @@ import { NotFoundError } from '../utils/errors.js';
  * @param {string} [options.order='desc'] - The sort order ('asc' or 'desc').
  * @returns {Promise<object>} An object containing the paginated results and metadata.
  */
-async function getPaginatedErrors({ page = 1, limit = 10, sortBy = 'timestamp', order = 'desc', errorType }) {
+export async function getPaginatedErrors({
+    page = 1,
+    limit = 10,
+    sortBy = "timestamp",
+    order = "desc",
+    errorType,
+}) {
     const skip = (page - 1) * limit;
-    const sortOptions = { [sortBy]: order === 'desc' ? -1 : 1 };
+    const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
     const query = {};
 
     if (errorType) {
@@ -21,12 +27,12 @@ async function getPaginatedErrors({ page = 1, limit = 10, sortBy = 'timestamp', 
 
     const [errors, totalCount] = await Promise.all([
         ErrorLog.find(query)
-            .select('-screenshot -stackTrace')
+            .select("-screenshot -stackTrace")
             .sort(sortOptions)
             .skip(skip)
             .limit(limit)
             .lean(),
-        ErrorLog.countDocuments(query)
+        ErrorLog.countDocuments(query),
     ]);
 
     const totalPages = Math.ceil(totalCount / limit);
@@ -44,16 +50,10 @@ async function getPaginatedErrors({ page = 1, limit = 10, sortBy = 'timestamp', 
  * @param {string} id - The ID of the error log.
  * @returns {Promise<object>} The full error log document.
  */
-async function getErrorById(id) {
+export async function getErrorById(id) {
     const errorLog = await ErrorLog.findById(id);
     if (!errorLog) {
         throw new NotFoundError(`Error log with ID ${id} not found.`);
     }
     return errorLog;
 }
-
-
-export const errorLogService = {
-    getPaginatedErrors,
-    getErrorById,
-}; 

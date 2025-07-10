@@ -51,11 +51,11 @@ const flipkartSelectors = {
         interstitialButtonSelectors: [], // No known interstitial pages for Flipkart yet
     },
     discovery: {
-        productListSelector: "div._1AtVbE",
-        nameSelector: ["div._4rR01T"],
-        priceSelector: ["div._30jeq3._1_WHN1"],
-        linkSelector: "a._1fQZEK",
-        imageSelector: ["img._396cs4"],
+        productListSelector: "div.cPHDOP.col-12-12",
+        nameSelector: ["div.KzDlHZ"],
+        priceSelector: ["div.Nx9bqj._4b5DiR"],
+        linkSelector: "a.CGtC98",
+        imageSelector: ["img.DByuf4"],
         nextButtonSelector: "a._1LKTO3",
     },
 };
