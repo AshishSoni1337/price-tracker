@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useToast } from "@/app/hooks/useToast";
+import { useToast } from "@/hooks/useToast";
 import { Loader2, Search, PlusCircle, CheckCircle } from "lucide-react";
 import {
     discoverProducts,

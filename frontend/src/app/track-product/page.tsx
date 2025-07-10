@@ -7,7 +7,7 @@ import type { DiscoveredProduct } from '@/types';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import { Loader2, Link as LinkIcon, Search, PlusCircle } from 'lucide-react';
-import { useToast } from '@/app/hooks/useToast';
+import { useToast } from '@/hooks/useToast';
 import { useRouter } from 'next/navigation';
 
 const ScrapedProductCard = ({ product, onConfirm, isAdding }: { product: DiscoveredProduct, onConfirm: () => void, isAdding: boolean }) => (

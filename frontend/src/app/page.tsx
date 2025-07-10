@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getProducts, updateProductStatus } from '@/services/productService';
 import type { Product } from '@/types';
-import { MoreVertical, Eye, Trash2, PauseCircle, PlayCircle, ExternalLink, PlusCircle } from 'lucide-react';
-import { useToast } from './hooks/useToast';
+import { MoreVertical, Eye, Trash2, PauseCircle, PlayCircle, ExternalLink, PlusCircle, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useToast } from '@/hooks/useToast';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const StatusBadge = ({ status }: { status: Product['status'] }) => {
     const statusClasses = {
@@ -120,27 +121,134 @@ const SkeletonCard = () => (
     </div>
 )
 
+interface SearchAndFilterProps {
+    onSearch: (search: string) => void;
+    onPlatformChange: (platform: string) => void;
+    onClear: () => void;
+    initialSearch: string;
+    initialPlatform: string;
+}
+
+const SearchAndFilter = ({ onSearch, onPlatformChange, onClear, initialSearch, initialPlatform }: SearchAndFilterProps) => {
+    const [search, setSearch] = useState(initialSearch);
+    const [platform, setPlatform] = useState(initialPlatform);
+    const debouncedSearch = useDebounce(search, 500);
+
+    useEffect(() => {
+        onSearch(debouncedSearch);
+    }, [debouncedSearch, onSearch]);
+
+    const handlePlatformChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newPlatform = e.target.value;
+        setPlatform(newPlatform);
+        onPlatformChange(newPlatform);
+    };
+
+    const clearFilters = () => {
+        setSearch('');
+        setPlatform('');
+        onClear();
+    };
+
+    return (
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                    type="text"
+                    placeholder="Search by product name..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                />
+            </div>
+            <select
+                value={platform}
+                onChange={handlePlatformChange}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
+            >
+                <option value="">All Platforms</option>
+                <option value="amazon">Amazon</option>
+                <option value="flipkart">Flipkart</option>
+            </select>
+             <button
+                onClick={clearFilters}
+                className="flex items-center justify-center gap-2 bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+                <X size={16} />
+                <span>Clear</span>
+            </button>
+        </div>
+    );
+};
+
+interface PaginationProps {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+}
+
+const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+    }
+    
+    return (
+        <div className="flex justify-center items-center gap-2 mt-8">
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+                aria-label="Previous page"
+            >
+                <ChevronLeft size={20} />
+            </button>
+            <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+            </span>
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+                aria-label="Next page"
+            >
+                <ChevronRight size={20} />
+            </button>
+        </div>
+    );
+};
+
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState('');
+  const [platform, setPlatform] = useState('');
   const toast = useToast();
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getProducts();
-        setProducts(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getProducts({ page: currentPage, search, platform });
+      setProducts(data.products);
+      setTotalPages(data.totalPages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, search, platform]);
 
+  useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   const handleStatusChange = async (productId: string, status: 'ACTIVE' | 'PAUSED') => {
     try {
@@ -153,6 +261,26 @@ export default function HomePage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  const handleSearch = (newSearch: string) => {
+    setSearch(newSearch);
+    setCurrentPage(1); // Reset to first page on new search
+  };
+
+  const handlePlatformChange = (newPlatform: string) => {
+    setPlatform(newPlatform);
+    setCurrentPage(1); // Reset to first page on platform change
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setPlatform('');
+    setCurrentPage(1);
+  };
+
   return (
     <main className="bg-gray-50 min-h-screen">
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -163,6 +291,14 @@ export default function HomePage() {
                     <span>Track New Product</span>
                 </Link>
             </div>
+
+            <SearchAndFilter
+                onSearch={handleSearch}
+                onPlatformChange={handlePlatformChange}
+                onClear={handleClearFilters}
+                initialSearch={search}
+                initialPlatform={platform}
+            />
             
             {isLoading && (
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
@@ -190,6 +326,7 @@ export default function HomePage() {
                             </Link>
                         </div>
                     )}
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
                 </>
             )}
         </div>

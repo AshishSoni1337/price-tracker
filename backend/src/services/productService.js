@@ -167,8 +167,36 @@ async function updateProduct(productId) {
     return product;
 }
 
-async function getAllTrackedProducts() {
-    return await Product.find().populate('variations').sort({ createdAt: -1 });
+async function getAllTrackedProducts(options = {}) {
+    const { page = 1, limit = 10, search, platform } = options;
+    const query = {};
+
+    if (search) {
+        query.name = { $regex: search, $options: 'i' };
+    }
+
+    if (platform) {
+        query.platform = platform;
+    }
+
+    const skip = (page - 1) * limit;
+    const limitNum = parseInt(limit, 10);
+
+    const products = await Product.find(query)
+        .populate('variations')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum);
+
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limitNum);
+
+    return {
+        products,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        totalProducts,
+    };
 }
 
 async function getProductDetails(id) {

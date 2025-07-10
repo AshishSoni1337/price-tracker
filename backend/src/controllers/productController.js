@@ -19,7 +19,13 @@ async function createProduct(req, res) {
 
 async function getAllProducts(req, res) {
     try {
-        const products = await productService.getAllTrackedProducts();
+        const { page = 1, limit = 10, search, platform } = req.query;
+        const products = await productService.getAllTrackedProducts({
+            page,
+            limit,
+            search,
+            platform,
+        });
         res.json(products);
     } catch (error) {
         logger.error('Error in getAllProducts:', error.message);

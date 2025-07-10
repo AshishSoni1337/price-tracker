@@ -9,7 +9,7 @@ import { getProductById, getProductHistory, toggleProductAlert } from '@/service
 import type { Product, ProductDetails, PriceHistoryPoint } from '@/types';
 import { ChevronLeft, ExternalLink, TrendingUp, Tag, Info, ShoppingCart, Bell } from 'lucide-react';
 import { Switch } from '../../components/common/Switch';
-import { useToast } from '@/app/hooks/useToast';
+import { useToast } from '@/hooks/useToast';
 
 const StatusBadge = ({ status }: { status: Product['status'] }) => {
     const statusClasses = {
