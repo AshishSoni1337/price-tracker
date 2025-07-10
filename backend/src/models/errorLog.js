@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { KNOWN_ERROR_TYPES } from '../constants/index.js';
 
 const errorLogSchema = new mongoose.Schema({
     errorMessage: {
@@ -7,7 +8,7 @@ const errorLogSchema = new mongoose.Schema({
     },
     errorType: {
         type: String,
-        enum: ['unknown', 'Error page'],
+        enum: KNOWN_ERROR_TYPES,
         default: 'unknown',
     },
     stackTrace: {

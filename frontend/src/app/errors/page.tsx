@@ -6,13 +6,15 @@ import type { ErrorLog, ErrorLogDetails, GetErrorsParams } from '@/types';
 import { API_BASE_URL } from '@/utils/api';
 import { ExternalLink, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
+// IMPORTANT: This list must be kept in sync with the KNOWN_ERROR_TYPES
+// enum in the backend: backend/src/constants/index.js
 const KNOWN_ERROR_TYPES = [
     'Page Not Found',
     'Invalid Request',
     'Processing Error',
     'Rush Hour Error',
     'unknown',
-    'Error page', // Keeping this for backward compatibility with old logs
+    'Error page',
 ];
 
 const ErrorDetailsModal = ({ errorDetails, onClose }: { errorDetails: ErrorLogDetails | null, onClose: () => void }) => {

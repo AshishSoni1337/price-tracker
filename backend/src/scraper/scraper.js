@@ -4,26 +4,30 @@ import { withPage } from "../services/browserManager.js";
 import { ScrapingError } from "../utils/errors.js";
 import { getDiscoveryPageSelectors } from "./selectors.js";
 
+// This mapping connects specific text on a webpage to a canonical error type.
+// The keys MUST be one of the values from the centralized KNOWN_ERROR_TYPES constant.
+const ERROR_PAGE_IDENTIFIERS = {
+    'Page Not Found': ["Sorry, we couldn't find that page"],
+    'Invalid Request': ["The request is invalid"],
+    'Processing Error': [
+        "We're sorry",
+        "An error occurred when we tried to process your request",
+    ],
+    'Rush Hour Error': ["It's rush hour and traffic is piling up"],
+};
+
 async function getKnownErrorType(page) {
-    const errorType = await page.evaluate(() => {
+    const errorType = await page.evaluate((errorIdentifiers) => {
         const pageText = document.body.innerText;
-        if (pageText.includes("Sorry, we couldn't find that page")) {
-            return "Page Not Found";
-        }
-        if (pageText.includes("The request is invalid")) {
-            return "Invalid Request";
-        }
-        if (
-            pageText.includes("We're sorry") &&
-            pageText.includes("An error occurred when we tried to process your request")
-        ) {
-            return "Processing Error";
-        }
-        if (pageText.includes("It's rush hour and traffic is piling up")) {
-            return "Rush Hour Error";
+        for (const type in errorIdentifiers) {
+            const identifiers = errorIdentifiers[type];
+            // Check if all identifiers for a given error type are present
+            if (identifiers.every(id => pageText.includes(id))) {
+                return type;
+            }
         }
         return null;
-    });
+    }, ERROR_PAGE_IDENTIFIERS);
     return errorType;
 }
 
@@ -201,12 +205,25 @@ export async function scrapeProductPage(url, selectors) {
                     ?.innerText.trim();
                 const images = querySelectorAllWithFallbacks(document, sel.imageSelector)
                     .map((img) => img.src);
-                const availabilityText = querySelectorWithFallbacks(document, sel.availabilitySelector)
-                    ?.innerText.trim().toLowerCase();
                 
                 let availability = "In Stock";
-                if (availabilityText && (availabilityText.includes('out of stock') || availabilityText.includes('unavailable'))) {
-                    availability = "Out of Stock";
+                if (sel.platform === 'amazon') {
+                    const hasBuyingOptions = document.querySelector('#buybox-see-all-buying-choices') !== null;
+                    if (hasBuyingOptions) {
+                        availability = "Available from other sellers";
+                    } else {
+                        const availabilityDiv = document.querySelector('#availability');
+                        if (availabilityDiv && availabilityDiv.innerText.toLowerCase().includes('unavailable')) {
+                            availability = "Out of Stock";
+                        }
+                    }
+                } else {
+                    // Generic fallback for other platforms
+                    const availabilityText = querySelectorWithFallbacks(document, sel.availabilitySelector)
+                        ?.innerText.trim().toLowerCase();
+                    if (availabilityText && (availabilityText.includes('out of stock') || availabilityText.includes('unavailable'))) {
+                        availability = "Out of Stock";
+                    }
                 }
 
                 let uniqueId = null;
