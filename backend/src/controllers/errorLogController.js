@@ -3,12 +3,13 @@ import { logger } from '../config/logger.js';
 
 async function getErrors(req, res) {
     try {
-        const { page = 1, limit = 10, sortBy = 'timestamp', order = 'desc' } = req.query;
+        const { page = 1, limit = 10, sortBy = 'timestamp', order = 'desc', errorType } = req.query;
         const options = {
             page: parseInt(page, 10),
             limit: parseInt(limit, 10),
             sortBy,
             order,
+            errorType,
         };
         const result = await errorLogService.getPaginatedErrors(options);
         res.json(result);

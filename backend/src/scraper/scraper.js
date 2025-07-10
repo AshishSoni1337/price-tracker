@@ -4,21 +4,33 @@ import { withPage } from "../services/browserManager.js";
 import { ScrapingError } from "../utils/errors.js";
 import { getDiscoveryPageSelectors } from "./selectors.js";
 
-async function isKnownErrorPage(page) {
-    // Check for Amazon's "dog page" which indicates a page not found error.
-    const isAmazonError = await page.evaluate(() => {
-        return !!document.querySelector(
-            'img[alt*="Sorry, we couldn\'t find that page"]');
+async function getKnownErrorType(page) {
+    const errorType = await page.evaluate(() => {
+        const pageText = document.body.innerText;
+        if (pageText.includes("Sorry, we couldn't find that page")) {
+            return "Page Not Found";
+        }
+        if (pageText.includes("The request is invalid")) {
+            return "Invalid Request";
+        }
+        if (
+            pageText.includes("We're sorry") &&
+            pageText.includes(
+                "An error occurred when we tried to process your request"
+            )
+        ) {
+            return "Processing Error";
+        }
+        if (pageText.includes("It's rush hour and traffic is piling up")) {
+            return "Rush Hour Error";
+        }
+        return null;
     });
-
-    // Future checks for other sites can be added here.
-    // const isSomeOtherSiteError = await page.evaluate(() => { ... });
-
-    return isAmazonError; // || isSomeOtherSiteError;
+    return errorType;
 }
 
 async function logScrapingError(page, url, error, isDataMissing = false) {
-    const knownError = await isKnownErrorPage(page);
+    const knownErrorType = await getKnownErrorType(page);
     const errorMessage = isDataMissing
         ? `Failed to scrape essential data. Name and/or Price are missing.`
         : error.message;
@@ -30,14 +42,16 @@ async function logScrapingError(page, url, error, isDataMissing = false) {
         errorType: "unknown",
     };
 
-    if (knownError) {
+    if (knownErrorType) {
         logger.warn(
-            `Known error page detected at ${url}. Skipping screenshot.`);
-        errorLog.errorType = "Error page";
+            `Known error page detected at ${url}: ${knownErrorType}. Skipping screenshot.`
+        );
+        errorLog.errorType = knownErrorType;
     } else {
         logger.error(
             `Unhandled error during scrape on ${url}. Taking screenshot.`,
-            { message: error.message, stack: error.stack });
+            { message: error.message, stack: error.stack }
+        );
         errorLog.screenshot = await page.screenshot({ fullPage: true });
     }
 

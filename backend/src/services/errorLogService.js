@@ -10,19 +10,23 @@ import { NotFoundError } from '../utils/errors.js';
  * @param {string} [options.order='desc'] - The sort order ('asc' or 'desc').
  * @returns {Promise<object>} An object containing the paginated results and metadata.
  */
-async function getPaginatedErrors({ page = 1, limit = 10, sortBy = 'timestamp', order = 'desc' }) {
+async function getPaginatedErrors({ page = 1, limit = 10, sortBy = 'timestamp', order = 'desc', errorType }) {
     const skip = (page - 1) * limit;
     const sortOptions = { [sortBy]: order === 'desc' ? -1 : 1 };
+    const query = {};
 
-    // Run queries in parallel for better performance and to avoid hanging
+    if (errorType) {
+        query.errorType = errorType;
+    }
+
     const [errors, totalCount] = await Promise.all([
-        ErrorLog.find()
-            .select('-screenshot -stackTrace') // Exclude large fields from the list view
+        ErrorLog.find(query)
+            .select('-screenshot -stackTrace')
             .sort(sortOptions)
             .skip(skip)
             .limit(limit)
             .lean(),
-        ErrorLog.countDocuments()
+        ErrorLog.countDocuments(query)
     ]);
 
     const totalPages = Math.ceil(totalCount / limit);

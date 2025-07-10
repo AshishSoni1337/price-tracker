@@ -6,6 +6,15 @@ import type { ErrorLog, ErrorLogDetails, GetErrorsParams } from '@/types';
 import { API_BASE_URL } from '@/utils/api';
 import { ExternalLink, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
+const KNOWN_ERROR_TYPES = [
+    'Page Not Found',
+    'Invalid Request',
+    'Processing Error',
+    'Rush Hour Error',
+    'unknown',
+    'Error page', // Keeping this for backward compatibility with old logs
+];
+
 const ErrorDetailsModal = ({ errorDetails, onClose }: { errorDetails: ErrorLogDetails | null, onClose: () => void }) => {
     if (!errorDetails) return null;
 
@@ -124,8 +133,9 @@ export default function ErrorsPage() {
                                 className="bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-8 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                                 <option value="all">All</option>
-                                <option value="unknown">Unknown</option>
-                                <option value="Error page">Error page</option>
+                                {KNOWN_ERROR_TYPES.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
                             </select>
                         </div>
                         <div>

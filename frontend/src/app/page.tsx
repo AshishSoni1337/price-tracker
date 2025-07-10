@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getProducts, updateProductStatus } from '@/services/productService';
 import type { Product } from '@/types';
-import { MoreVertical, Eye, Trash2, PauseCircle, PlayCircle, ExternalLink, PlusCircle, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MoreVertical, Eye, Trash2, PauseCircle, PlayCircle, ExternalLink, PlusCircle, Search, X } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -135,6 +135,11 @@ const SearchAndFilter = ({ onSearch, onPlatformChange, onClear, initialSearch, i
     const debouncedSearch = useDebounce(search, 500);
 
     useEffect(() => {
+        setSearch(initialSearch);
+        setPlatform(initialPlatform);
+    }, [initialSearch, initialPlatform]);
+
+    useEffect(() => {
         onSearch(debouncedSearch);
     }, [debouncedSearch, onSearch]);
 
@@ -182,52 +187,10 @@ const SearchAndFilter = ({ onSearch, onPlatformChange, onClear, initialSearch, i
     );
 };
 
-interface PaginationProps {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-}
-
-const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
-    if (totalPages <= 1) return null;
-
-    const pageNumbers = [];
-    for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-    }
-    
-    return (
-        <div className="flex justify-center items-center gap-2 mt-8">
-            <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
-                aria-label="Previous page"
-            >
-                <ChevronLeft size={20} />
-            </button>
-            <span className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-            </span>
-            <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
-                aria-label="Next page"
-            >
-                <ChevronRight size={20} />
-            </button>
-        </div>
-    );
-};
-
-
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [platform, setPlatform] = useState('');
   const toast = useToast();
@@ -236,15 +199,14 @@ export default function HomePage() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getProducts({ page: currentPage, search, platform });
+      const data = await getProducts({ page: 1, limit: 100, search, platform });
       setProducts(data.products);
-      setTotalPages(data.totalPages);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, search, platform]);
+  }, [search, platform]);
 
   useEffect(() => {
     fetchProducts();
@@ -261,24 +223,17 @@ export default function HomePage() {
     }
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-  
   const handleSearch = (newSearch: string) => {
     setSearch(newSearch);
-    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handlePlatformChange = (newPlatform: string) => {
     setPlatform(newPlatform);
-    setCurrentPage(1); // Reset to first page on platform change
   };
 
   const handleClearFilters = () => {
     setSearch('');
     setPlatform('');
-    setCurrentPage(1);
   };
 
   return (
@@ -326,7 +281,6 @@ export default function HomePage() {
                             </Link>
                         </div>
                     )}
-                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
                 </>
             )}
         </div>

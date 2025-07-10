@@ -8,7 +8,11 @@ import type {
 export function getErrorLogs(
     params: GetErrorsParams = {}
 ): Promise<PaginatedErrorResponse> {
-    return api.get("/api/errors", { params });
+    const apiParams = { ...params };
+    if (apiParams.errorType === 'all') {
+        delete apiParams.errorType;
+    }
+    return api.get("/api/errors", { params: apiParams });
 }
 
 export function getErrorLogDetails(id: string): Promise<ErrorLogDetails> {
