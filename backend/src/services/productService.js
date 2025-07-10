@@ -134,7 +134,7 @@ async function updateProduct(productId) {
     if (price && (price !== product.currentPrice || !isUpdatedToday)) {
         if (price !== product.currentPrice) {
             logger.info(`Price changed for ${product.name}: ${colors.yellow}${product.currentPrice}${colors.reset} -> ${colors.green}${price}${colors.reset}`);
-            
+
             // Check for price drop alert
             if (product.alertEnabled && oldPrice && price < oldPrice * (1 - alertConfig.priceDropThreshold)) {
                 logger.info(`Price drop detected for ${product.name}. Triggering alert.`);

@@ -10,6 +10,7 @@ import { initBrowser, closeBrowser } from "./services/browserManager.js";
 import {
     PORT,
     CORS_ALLOWED_ORIGINS,
+    ENABLE_JOB_PRODUCER,
     ENABLE_SCRAPING_WORKER,
 } from "./config/appConfig.js";
 import { initScheduledJobs } from "./cron/scheduler.js";
@@ -53,11 +54,21 @@ function startWorker() {
     worker.on("completed", (job) => {
         logger.info(`Job ${job.id} has completed.`);
     });
-
     worker.on("failed", (job, err) => {
         logger.error(`Job ${job.id} has failed with error: ${err.message}`);
     });
-
+    worker.on("error", (err) => {
+        logger.error(`Scraping worker error: ${err.message}`);
+    });
+    worker.on("waiting", (job) => {
+        logger.info(`Job ${job.idId} is waiting to be processed.`);
+    });
+    worker.on("active", (job) => {
+        logger.info(`Job ${job.id} is active.`);
+    });
+    worker.on("stalled", (job) => {
+        logger.warn(`Job ${job.id} is stalled.`);
+    });
     logger.info("Scraping worker is running, waiting for jobs...");
 }
 
@@ -66,16 +77,17 @@ async function startServer() {
         await connectDB();
         await initBrowser();
 
-        if (ENABLE_SCRAPING_WORKER) {
-            logger.info(
-                "Scraping worker is enabled. Initializing scheduled jobs and worker..."
-            );
+        if (ENABLE_JOB_PRODUCER) {
+            logger.info("Job producer is enabled. Initializing scheduled jobs...");
             initScheduledJobs();
+        } else {
+            logger.info("Job producer is disabled. Skipping initialization.");
+        }
+        if (ENABLE_SCRAPING_WORKER) {
+            logger.info("Scraping worker is enabled. Initializing worker...");
             startWorker();
         } else {
-            logger.info(
-                "Scraping worker is disabled. Skipping initialization."
-            );
+            logger.info("Scraping worker is disabled. Skipping initialization.");
         }
 
         logger.info(`Current environment: ${process.env.NODE_ENV}`);

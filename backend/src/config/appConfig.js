@@ -24,5 +24,7 @@ export const INFLUX_ORG = process.env.INFLUXDB_ORG;
 export const INFLUX_BUCKET = process.env.INFLUXDB_BUCKET;
 
 // Worker Configuration
+export const ENABLE_JOB_PRODUCER =
+    process.env.ENABLE_JOB_PRODUCER === "true";
 export const ENABLE_SCRAPING_WORKER =
     process.env.ENABLE_SCRAPING_WORKER === "true";

@@ -1,35 +1,17 @@
     import playwright from "playwright-extra";
     import stealthPlugin from "puppeteer-extra-plugin-stealth";
     import UserAgent from "user-agents";
-    import { MAX_CONCURRENT_TABS, HEADLESS } from "../config/appConfig.js";
+    import { HEADLESS } from "../config/appConfig.js";
     import { logger } from "../config/logger.js";
 
     const stealth = stealthPlugin();
     playwright.chromium.use(stealth);
 
     let browser = null;
-    let activeTabCount = 0;
-    const requestQueue = [];
-    let jobsCompleted = 0;
-    const MAX_JOBS_BEFORE_RESTART = 50;
-    let isRestarting = false;
 
-    async function restartBrowser() {
-        if (isRestarting) return;
-        isRestarting = true;
-        logger.info("Restarting browser to prevent memory leaks...");
-
-        try {
-            await closeBrowser();
-            await initBrowser();
-            jobsCompleted = 0;
-            logger.info("Browser restarted successfully.");
-        } catch (error) {
-            logger.error("Failed to restart browser:", error);
-        } finally {
-            isRestarting = false;
-        }
-    }
+    // The complex browser restart logic has been removed for simplification.
+    // Concurrency is now managed directly by the BullMQ worker settings.
+    // For memory management, a simpler strategy is to periodically restart the entire worker process.
 
     export async function initBrowser() {
         if (browser) return;
@@ -64,11 +46,6 @@
     }
 
     export async function withPage(fn) {
-        if (activeTabCount >= MAX_CONCURRENT_TABS) {
-            await new Promise((resolve) => requestQueue.push(resolve));
-        }
-        activeTabCount++;
-
         if (!browser || !browser.isConnected()) {
             logger.info(
                 "Browser not available or disconnected. Initializing a new one."
@@ -100,16 +77,5 @@
         } finally {
             await page.close();
             await context.close();
-
-            activeTabCount--;
-            jobsCompleted++;
-
-            if (requestQueue.length > 0) {
-                requestQueue.shift()();
-            }
-
-            if (jobsCompleted >= MAX_JOBS_BEFORE_RESTART && activeTabCount === 0) {
-                await restartBrowser();
-            }
         }
     }
