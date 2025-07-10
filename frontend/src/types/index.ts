@@ -19,13 +19,15 @@ export interface Product {
     lastScrapedAt: string;
     images: string[];
     availability: string;
+    alertEnabled: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface ProductDetails extends Product {
     description: string;
     images: string[];
     variations: { price: number }[];
-    alertEnabled: boolean;
 }
 
 export type DiscoveredProduct = {
