@@ -207,6 +207,13 @@ export async function scrapeProductPage(url, selectors) {
                     ?.innerText.trim();
                 const images = querySelectorAllWithFallbacks(document, sel.imageSelector)
                     .map((img) => img.src);
+                const availabilityText = querySelectorWithFallbacks(document, sel.availabilitySelector)
+                    ?.innerText.trim().toLowerCase();
+                
+                let availability = "In Stock";
+                if (availabilityText && (availabilityText.includes('out of stock') || availabilityText.includes('unavailable'))) {
+                    availability = "Out of Stock";
+                }
 
                 let uniqueId = null;
                 if (sel.platform === "amazon") {
@@ -217,13 +224,13 @@ export async function scrapeProductPage(url, selectors) {
                         ?.innerText.trim();
                 }
 
-                return { name, price, description, images, uniqueId };
+                return { name, price, description, images, uniqueId, availability };
             }, selectors);
 
             // After scraping, validate essential data
-            if (!details.name || !details.price) {
+            if (!details.name || (!details.price && details.availability === 'In Stock')) {
                 const scrapingError = new ScrapingError(
-                    `Failed to scrape essential data. Name: ${details.name}, Price: ${details.price}`);
+                    `Failed to scrape essential data. Name: ${details.name}, Price: ${details.price}, Availability: ${details.availability}`);
                 await logScrapingError(page, url, scrapingError, true);
                 throw scrapingError;
             }

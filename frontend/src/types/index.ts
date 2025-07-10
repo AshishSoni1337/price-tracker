@@ -14,20 +14,18 @@ export interface Product {
     name: string;
     url: string;
     platform: string;
-    images: string[];
     currentPrice: number;
-    lastScrapedAt: string;
     status: 'ACTIVE' | 'PAUSED' | 'ERROR';
-    tracking_frequency: string;
-    createdAt: string;
-    updatedAt: string;
-    alertEnabled: boolean;
+    lastScrapedAt: string;
+    images: string[];
+    availability: string;
 }
 
 export interface ProductDetails extends Product {
     description: string;
     images: string[];
-    variations: Variation[];
+    variations: { price: number }[];
+    alertEnabled: boolean;
 }
 
 export type DiscoveredProduct = {

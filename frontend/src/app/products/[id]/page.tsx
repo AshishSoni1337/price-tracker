@@ -25,6 +25,20 @@ const StatusBadge = ({ status }: { status: Product['status'] }) => {
     );
 };
 
+const AvailabilityBadge = ({ availability }: { availability: string }) => {
+    const isAvailable = availability === 'In Stock';
+    const baseClasses = "px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider";
+    const availabilityClasses = isAvailable
+        ? "bg-green-100 text-green-800"
+        : "bg-red-100 text-red-800";
+
+    return (
+        <span className={`${baseClasses} ${availabilityClasses}`}>
+            {availability}
+        </span>
+    );
+};
+
 export default function ProductDetailPage() {
   const params = useParams();
   const { id } = params;
@@ -183,13 +197,25 @@ export default function ProductDetailPage() {
                     </div>
 
                     <div className="bg-white rounded-lg shadow-md p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <p className="text-gray-600 text-sm flex items-center"><Tag size={16} className="mr-2" /> Current Price</p>
-                            <StatusBadge status={product.status} />
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p className="text-gray-600 text-sm flex items-center mb-2"><Tag size={16} className="mr-2" /> Current Price</p>
+                                <p className="text-3xl md:text-4xl font-extrabold text-gray-900">
+                                    {product.availability === 'In Stock'
+                                        ? (product.currentPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || 'N/A')
+                                        : 'N/A'
+                                    }
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-gray-600 text-sm flex items-center justify-end mb-2"><Info size={16} className="mr-2" /> Status</p>
+                                <div className="flex justify-end items-center gap-2">
+                                    <AvailabilityBadge availability={product.availability} />
+                                    <StatusBadge status={product.status} />
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-3xl md:text-4xl font-extrabold text-gray-900">
-                            {product.variations[0]?.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || 'N/A'}
-                        </p>
+
                         <div className="mt-6 border-t pt-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
@@ -213,9 +239,23 @@ export default function ProductDetailPage() {
                        <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{product.description || 'No description available.'}</p>
                     </div>
 
-                     <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                     <a 
+                        href={product.availability === 'In Stock' ? product.url : undefined} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className={`flex items-center justify-center gap-2 w-full text-white font-semibold px-6 py-3 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                            product.availability === 'In Stock' 
+                                ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                                : 'bg-gray-400 cursor-not-allowed'
+                        }`}
+                        onClick={(e) => {
+                            if (product.availability !== 'In Stock') {
+                                e.preventDefault();
+                            }
+                        }}
+                    >
                         <ShoppingCart size={20} />
-                        <span>Buy on Store</span>
+                        <span>{product.availability === 'In Stock' ? 'Buy on Store' : 'Out of Stock'}</span>
                     </a>
                 </div>
             </div>

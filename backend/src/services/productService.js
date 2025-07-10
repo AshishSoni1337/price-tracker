@@ -80,7 +80,7 @@ async function trackNewProduct(url) {
         throw new ScrapingError('This website is not supported for tracking.');
     }
 
-    const { name, price, description, images, uniqueId } = await _scrapeAndValidateData(url, selectors);
+    const { name, price, description, images, uniqueId, availability } = await _scrapeAndValidateData(url, selectors);
     const platform = _getPlatformFromUrl(url);
 
     await _validateProductDoesNotExist(url, platform, uniqueId);
@@ -93,6 +93,7 @@ async function trackNewProduct(url) {
         currentPrice: price,
         description,
         images,
+        availability,
         lastScrapedAt: new Date()
     };
 
@@ -110,7 +111,7 @@ async function updateProduct(productId) {
         throw new ScrapingError(`No selectors found for ${product.url}, cannot update.`);
     }
 
-    const { name, price, description, images } = await _scrapeAndValidateData(product.url, selectors);
+    const { name, price, description, images, availability } = await _scrapeAndValidateData(product.url, selectors);
 
     // Update product fields
     product.name = name || product.name;
@@ -118,6 +119,7 @@ async function updateProduct(productId) {
     product.images = images || product.images;
     product.status = 'ACTIVE';
     product.retryCount = 0;
+    product.availability = availability || product.availability;
 
     const oldPrice = product.currentPrice;
     const isUpdatedToday = product.lastScrapedAt?.toDateString() === new Date().toDateString();
@@ -131,10 +133,10 @@ async function updateProduct(productId) {
     };
 
     // Check if the price has changed OR if it's the first scrape of the day
-    if (price && (price !== product.currentPrice || !isUpdatedToday)) {
+    if (availability === 'In Stock' && price && (price !== product.currentPrice || !isUpdatedToday)) {
         if (price !== product.currentPrice) {
             logger.info(`Price changed for ${product.name}: ${colors.yellow}${product.currentPrice}${colors.reset} -> ${colors.green}${price}${colors.reset}`);
-
+            
             // Check for price drop alert
             if (product.alertEnabled && oldPrice && price < oldPrice * (1 - alertConfig.priceDropThreshold)) {
                 logger.info(`Price drop detected for ${product.name}. Triggering alert.`);
@@ -158,7 +160,10 @@ async function updateProduct(productId) {
         await writeApi.flush();
     } else if (price) {
         logger.info(`Price for ${product.name} has not changed and was already updated today: ${colors.cyan}${price}${colors.reset}`);
-    } else {
+    } else if (availability === 'Out of Stock') {
+        logger.info(`Product ${product.name} is out of stock. Price not updated.`);
+    }
+    else {
         logger.warn(`Could not scrape a valid price for ${product.name}.`);
     }
 

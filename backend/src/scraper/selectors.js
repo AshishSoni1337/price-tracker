@@ -4,6 +4,10 @@ const amazonSelectors = {
         priceSelector: [
             "#centerCol .a-price-whole"
         ],
+        availabilitySelector: [
+            '#availability span',
+            '#outOfStock > div > div > span'
+        ],
         descriptionSelector: ["#feature-bullets"],
         imageSelector: ["#landingImage"],
         // This is now handled by custom logic in the scraper
@@ -36,6 +40,9 @@ const flipkartSelectors = {
     product: {
         nameSelector: ["span.B_NuCI"],
         priceSelector: ["div._30jeq3._16Jk6d"],
+        availabilitySelector: [
+            'div._16FRp0'
+        ],
         descriptionSelector: ["div._1mXcCf.RmoJUa"],
         imageSelector: ["img._396cs4._2amPTt._3qGmMb"],
         uniqueIdSelector: [], // Flipkart's Unique ID (FSN) is often in the URL, not easily found on page.

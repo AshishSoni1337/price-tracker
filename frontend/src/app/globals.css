@@ -32,6 +32,21 @@ body {
 @layer base {
   body {
     @apply bg-gray-50 text-gray-800;
+    color-scheme: light dark;
+  }
+  input,
+  select {
+      @apply bg-white text-gray-900;
+  }
+
+  html.dark {
+      body {
+          @apply bg-gray-900 text-gray-50;
+      }
+      input,
+      select {
+          @apply bg-gray-800 text-gray-50;
+      }
   }
 }
 

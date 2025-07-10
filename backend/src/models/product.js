@@ -18,6 +18,10 @@ const productSchema = new Schema({
     platform: { type: String, required: true }, // e.g., 'amazon', 'flipkart'
     uniqueId: { type: String }, // e.g., ASIN for Amazon
     currentPrice: { type: Number },
+    availability: {
+        type: String,
+        default: "In Stock",
+    },
     lastScrapedAt: { type: Date },
     status: {
         type: String,
