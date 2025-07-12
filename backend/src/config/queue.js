@@ -60,5 +60,7 @@ export const createScrapingWorker = (processor) => {
     return new Worker(QUEUE_NAME, processor, {
         ...connection,
         concurrency: MAX_CONCURRENT_TABS,
+        lockDuration: 300000, // 5 minutes
+        lockRenewTime: 150000, // 2.5 minutes
     });
 };

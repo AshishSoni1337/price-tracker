@@ -178,9 +178,7 @@ export async function scrapeProductPage(url, selectors) {
 
                     // Strategy 2: Find in the detail bullets list
                     const liElements = Array.from(
-                        document.querySelectorAll(
-                            "#detailBullets_feature_div li"
-                        )
+                        document.querySelectorAll("#detailBullets_feature_div li")
                     );
                     for (const li of liElements) {
                         if (
@@ -315,9 +313,7 @@ export async function scrapeDiscoveryPage(page, url) {
             };
 
 
-            const productNodes = document.querySelectorAll(
-                s.productListSelector
-            );
+            const productNodes = document.querySelectorAll(s.productListSelector);
             const products = [];
 
             productNodes.forEach((node) => {
