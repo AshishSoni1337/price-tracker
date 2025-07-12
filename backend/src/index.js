@@ -6,6 +6,7 @@ import { connectDB, disconnectDB } from "./config/db.js";
 import "./config/influxdb.js";
 import productRoutes from "./routes/products.js";
 import errorLogRoutes from "./routes/errors.js";
+import healthRoutes from "./routes/health.js";
 import { initBrowser, closeBrowser } from "./services/browserManager.js";
 import {
     PORT,
@@ -46,6 +47,7 @@ app.get("/", (req, res) => {
 // Define Routes
 app.use("/api/products", productRoutes);
 app.use("/api/errors", errorLogRoutes);
+app.use("/api", healthRoutes);
 
 function startWorker() {
     logger.info("Starting scraping worker in-process...");

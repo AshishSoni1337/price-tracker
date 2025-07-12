@@ -25,6 +25,10 @@ export const connectDB = async () => {
     }
 };
 
+export const checkDbConnection = () => {
+    return isConnected;
+};
+
 export const disconnectDB = async () => {
     if (!isConnected) {
         logger.info("Database is not connected.");
